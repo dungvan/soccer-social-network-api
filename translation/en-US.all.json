@@ -1,0 +1,18 @@
+[
+  {
+    "id": "error",
+    "translation": "{{.Function}} errors."
+  },
+  {
+    "id": "success",
+    "translation": "success."
+  },
+  {
+    "id": "add",
+    "translation": "{{.Title}} add {{.RowAffected}}."
+  },
+  {
+    "id": "delete",
+    "translation": "{{.Title}} remove {{.RowAffected}}."
+  }
+]
