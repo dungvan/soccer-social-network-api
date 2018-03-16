@@ -1,0 +1,9 @@
+{
+    "host": {
+        "address": "localhost",
+        "port": 8080
+    },
+    "language": {
+        "default": "en-US"
+    }
+}

@@ -1,0 +1,47 @@
+{
+    "multipart": {
+        "maxmemory": 1073741824
+    },
+    "app": {
+        "logger": {
+            "_comment": "output can select 'output' value or 'file' value. 'output' value is stdout. you should must set 'file' key when file value output file.",
+            "output": "output",
+            "file": "/var/log/socker-social-network/socker-social-network.log",
+            "level": "debug",
+            "format": "json"
+        }
+    },
+    "database": {
+        "dbms": "postgres",
+        "host": "db",
+        "user": "postgres",
+        "pass": "mypass",
+        "name": "circle",
+        "port": "5432",
+        "logmode": true
+    },
+    "redis": {
+        "host": "redis",
+        "port": "6379",
+        "pass": ""
+    },
+    "objectstorage": {
+        "storage": "minio",
+        "endpoint": "50164d3d.ngrok.io",
+        "region": "ap-northeast-1",
+        "bucketname": "item",
+        "accesskey": "AKIAIOSFODNN7EXAMPLE",
+        "secretkey": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+        "secure": false
+    },
+    "jwt": {
+        "_comment": "keypath is the private key used file by jwt.",
+        "key": "1CgxTZkylgQYXu16fVQ8fkd_Kbw7h5XMITtNrEOqXFdzy6WTWQOKW7lc_DINetHOwIWyCZcQRdqUIxyN60gNkXoclS73Lwm8eCvbgOArMGwDyaWKC6Gv2cYkelW6ecLwTahr2NkM31FoOiZgTp6pKNcBUhI9YlD2np31iebDHgMcLKIf0N7Bv_U-yd8cDigJDSXpDbMVvwDl0aDCau3u4AW13rP-KyKQHIv63IQFPbZqlt4pDgsNRuthiPtkNO_taHxzOnonaffgmQB1YrDgETUtS9s8ok6ES5PUdip9BVqC4-473LpPNV02eKHJzEkbvtTZrOuZTdBXrbYvkKIR3Q",
+        "header": "Authorization",
+        "claim": {
+            "_comment": "unit of exp is seconds.",
+            "issuer": "fr-circle-api.com",
+            "exp": 604800
+        }
+    }
+}
