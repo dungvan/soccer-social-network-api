@@ -2,6 +2,7 @@ package auth
 
 import (
 	rqContext "context"
+	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/dungvan2512/socker-social-network/infrastructure"
@@ -52,6 +53,48 @@ func ParseToken(tokenString string) (user UserAuth, err error) {
 	}
 	err = utils.ErrorsNew("No claims token")
 	return UserAuth{}, err
+}
+
+// JWTObject interface
+type JWTObject interface {
+	GetCustomClaims() map[string]interface{}
+	GetIdentifier() uint64
+}
+
+// GenerateToken Generate token
+func GenerateToken(object JWTObject) (accessToken string, err error) {
+	if object == nil {
+		err = utils.ErrorsNew("Object is nil")
+		return
+	}
+	emptyID := uint64(0)
+	if object.GetIdentifier() == emptyID {
+		err = utils.ErrorsNew("Object is empty")
+		return
+	}
+	exp := infrastructure.GetConfigInt64("jwt.claim.exp")
+	issuer := infrastructure.GetConfigString("jwt.claim.issuer")
+	customClaims := object.GetCustomClaims()
+	standardClaims := jwt.StandardClaims{
+		Issuer:    issuer,
+		ExpiresAt: time.Now().Add(time.Duration(exp) * time.Second).Unix(),
+		IssuedAt:  time.Now().Unix(),
+		NotBefore: time.Now().Unix(),
+	}
+	pay := payload{
+		StandardClaims: standardClaims,
+		Context:        customClaims,
+	}
+	token := jwt.New(jwt.SigningMethodHS256)
+	token.Claims = pay
+	key := infrastructure.GetConfigByte("jwt.key")
+	accessToken, err = token.SignedString(key)
+	return
+}
+
+type payload struct {
+	jwt.StandardClaims
+	Context map[string]interface{} `json:"context"`
 }
 
 // GetUserFromContext get user id from context
