@@ -67,7 +67,7 @@ services:
             - redis
         ports:
             - "8080:8080" # host:container
-        working_dir: /go/src/github.com/monstar-lab/fr-circle-api
+        working_dir: /go/src/github.com/dungvan2512/sport-social-network
         volumes:
-            - .:/go/src/github.com/monstar-lab/fr-circle-api
+            - .:/go/src/github.com/dungvan2512/sport-social-network
         container_name: go-cont
