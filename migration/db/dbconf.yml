@@ -1,0 +1,12 @@
+local:
+    driver: postgres
+    open: host=db user=postgres password=mypass dbname=circle sslmode=disable
+development:
+    driver: postgres
+    open: host=develop-circle-db.cq7hzn6hnus4.ap-northeast-1.rds.amazonaws.com user=devdbmaster password=AQP;vOpC26r]GQHF dbname=circle sslmode=disable
+staging:
+    driver: postgres
+    open: host=stg-circle-db.c36tywsyvd5x.ap-northeast-1.rds.amazonaws.com user=stgdbmaster password=xKS#dctE%y<I dbname=circle sslmode=disable
+production:
+    driver: postgres
+    open: host=stg-circle-db.c36tywsyvd5x.ap-northeast-1.rds.amazonaws.com user=stgdbmaster password=xKS#dctE%y<I dbname=circle sslmode=disable

@@ -1,0 +1,90 @@
+# Gopkg.toml example
+#
+# Refer to https://golang.github.io/dep/docs/Gopkg.toml.html
+# for detailed Gopkg.toml documentation.
+#
+# required = ["github.com/user/thing/cmd/thing"]
+# ignored = ["github.com/user/project/pkgX", "bitbucket.org/user/project/pkgA/pkgY"]
+#
+# [[constraint]]
+#   name = "github.com/user/project"
+#   version = "1.0.0"
+#
+# [[constraint]]
+#   name = "github.com/user/project2"
+#   branch = "dev"
+#   source = "github.com/myfork/project2"
+#
+# [[override]]
+#   name = "github.com/x/y"
+#   version = "2.4.0"
+#
+# [prune]
+#   non-go = false
+#   go-tests = true
+#   unused-packages = true
+
+
+[[constraint]]
+  name = "github.com/aws/aws-sdk-go"
+  version = "1.13.16"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/dalu/i18n"
+
+[[constraint]]
+  name = "github.com/dgrijalva/jwt-go"
+  version = "3.2.0"
+
+[[constraint]]
+  name = "github.com/fsnotify/fsnotify"
+  version = "1.4.7"
+
+[[constraint]]
+  name = "github.com/garyburd/redigo"
+  version = "1.6.0"
+
+[[constraint]]
+  name = "github.com/go-chi/chi"
+  version = "3.3.2"
+
+[[constraint]]
+  name = "github.com/go-playground/form"
+  version = "3.1.0"
+
+[[constraint]]
+  name = "github.com/jinzhu/gorm"
+  version = "1.9.1"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/lib/pq"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/mitchellh/mapstructure"
+
+[[constraint]]
+  name = "github.com/nicksnyder/go-i18n"
+  version = "1.10.0"
+
+[[constraint]]
+  name = "github.com/sirupsen/logrus"
+  version = "1.0.5"
+
+[[constraint]]
+  name = "github.com/spf13/viper"
+  version = "1.0.0"
+
+[[constraint]]
+  name = "github.com/stretchr/testify"
+  version = "1.2.1"
+
+[[constraint]]
+  name = "gopkg.in/go-playground/validator.v9"
+  version = "9.12.0"
+
+[prune]
+  go-tests = true
+  unused-packages = true
