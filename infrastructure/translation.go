@@ -20,7 +20,7 @@ type Translation struct {
 // NewTranslation returns new Translation.
 // repository: https://github.com/dalu/i18n
 func NewTranslation() *Translation {
-	dir := os.Getenv("GOPATH") + "/src/github.com/dungva2512/socker-social-network"
+	dir := os.Getenv("SSN_API_DIR")
 	files, err := filepath.Glob(dir + "/" + DirTranslation + "/*.json")
 	if err != nil {
 		panic(err)

@@ -7,7 +7,6 @@ import (
 	module "github.com/dungvan2512/socker-social-network/sample-module"
 	"github.com/dungvan2512/socker-social-network/shared/base"
 	mMiddleware "github.com/dungvan2512/socker-social-network/shared/middleware"
-	"github.com/fastretailing1/circle-api/shared/handler"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 )
@@ -20,12 +19,10 @@ type Router struct {
 	CacheHandler       *infrastructure.Cache
 	LoggerHandler      *infrastructure.Logger
 	TranslationHandler *infrastructure.Translation
-	SearchAPIHandler   infrastructure.SearchAPI
 }
 
 // InitializeRouter initializes Mux and middleware
 func (r *Router) InitializeRouter() {
-
 	r.Mux.Use(middleware.RequestID)
 	r.Mux.Use(middleware.RealIP)
 	// Custom middleware(Translation)
@@ -37,7 +34,7 @@ func (r *Router) InitializeRouter() {
 // SetupHandler set database and redis and usecase.
 func (r *Router) SetupHandler() {
 	// error handler set.
-	eh := handler.NewHTTPErrorHandler(r.LoggerHandler.Log)
+	eh := base.NewHTTPErrorHandler(r.LoggerHandler.Log)
 	r.Mux.NotFound(eh.StatusNotFound)
 	r.Mux.MethodNotAllowed(eh.StatusMethodNotAllowed)
 
@@ -50,8 +47,8 @@ func (r *Router) SetupHandler() {
 	// base set.
 	bu := base.NewUsecase(r.LoggerHandler.Log)
 	// outfit set.
-	mh := module.NewHTTPHandler(bh, bu, br, r.SQLHandler, r.CacheHandler, r.S3Handler)
-	r.Mux.Route("/sample", func(cr chi.Router) {
-		cr.Get("/", mh.SampleHandler)
+	mh := module.NewHTTPHandler(bh, bu, br, r.SQLHandler, r.CacheHandler)
+	r.Mux.Route("/", func(cr chi.Router) {
+		cr.Get("/sample", mh.SampleHandler)
 	})
 }

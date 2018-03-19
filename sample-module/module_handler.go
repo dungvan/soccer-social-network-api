@@ -14,7 +14,7 @@ type HTTPHandler struct {
 }
 
 // SampleHandler func
-func (h *HTTPHandler) SampleHandler(r *http.Request, w http.ResponseWriter) {
+func (h *HTTPHandler) SampleHandler(w http.ResponseWriter, r *http.Request) {
 	h.ResponseJSON(w, struct {
 		Message string `json:"message"`
 	}{"this is sample response"})

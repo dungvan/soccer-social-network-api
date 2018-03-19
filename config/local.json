@@ -16,7 +16,7 @@
         "host": "db",
         "user": "postgres",
         "pass": "mypass",
-        "name": "circle",
+        "name": "ssn",
         "port": "5432",
         "logmode": true
     },
@@ -40,7 +40,7 @@
         "header": "Authorization",
         "claim": {
             "_comment": "unit of exp is seconds.",
-            "issuer": "fr-circle-api.com",
+            "issuer": "socker-social-network",
             "exp": 604800
         }
     }

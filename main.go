@@ -29,8 +29,6 @@ func startExt() {
 	loggerHandler := infrastructure.NewLogger()
 	// translation new.
 	translationHandler := infrastructure.NewTranslation()
-	// 3rd search api setup
-	searchAPIHandler := infrastructure.NewSearchAPI()
 
 	mux := chi.NewRouter()
 	r := &router.Router{
@@ -48,7 +46,6 @@ func startExt() {
 	// after process
 	defer infrastructure.CloseLogger(r.LoggerHandler.Logfile)
 	defer infrastructure.CloseRedis(r.CacheHandler.Conn)
-	defer infrastructure.CloseLogger(mLogger.Logfile)
 
 	_ = http.ListenAndServe(":8080", mux)
 }

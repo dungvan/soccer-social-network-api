@@ -5,8 +5,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/dungvan2512/socker-social-network/authentication"
 	"github.com/dungvan2512/socker-social-network/infrastructure"
+	"github.com/dungvan2512/socker-social-network/shared/auth"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -47,7 +47,7 @@ func getTokenTest() string {
 		ID:        123,
 		GetClaims: getClaims,
 	}
-	token, _ := authentication.GenerateToken(uMock)
+	token, _ := auth.GenerateToken(uMock)
 	return token
 }
 

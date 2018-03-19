@@ -2,7 +2,7 @@
 FROM golang:1.9.2-alpine
 
 ENV ENV_API local
-ENV FR_CIRCLE_API_DIR /go/src/github.com/monstar-lab/fr-circle-api
+ENV SSN_API_DIR /go/src/github.com/dungvan2512/socker-social-network
 
 #install git
 RUN apk add --no-cache git mercurial
