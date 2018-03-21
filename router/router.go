@@ -48,6 +48,8 @@ func (r *Router) SetupHandler() {
 	bu := base.NewUsecase(r.LoggerHandler.Log)
 	// outfit set.
 	mh := module.NewHTTPHandler(bh, bu, br, r.SQLHandler, r.CacheHandler)
+	// authentication middleware.
+	authMiddleware := mMiddleware.JwtAuth(r.LoggerHandler)
 	r.Mux.Route("/", func(cr chi.Router) {
 		cr.Get("/sample", mh.SampleHandler)
 	})

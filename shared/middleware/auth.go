@@ -5,7 +5,9 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/dungvan2512/socker-social-network/model"
 	"github.com/dungvan2512/socker-social-network/shared/auth"
+	"github.com/jinzhu/gorm"
 
 	"github.com/dungvan2512/socker-social-network/infrastructure"
 	"github.com/dungvan2512/socker-social-network/shared/utils"
@@ -24,7 +26,7 @@ func DefaultUnauthorizedResponse() AuthFailedResponse {
 }
 
 // JwtAuth check jwt header parse and validation.
-func JwtAuth(logger *infrastructure.Logger) func(http.Handler) http.Handler {
+func JwtAuth(logger *infrastructure.Logger, db *gorm.DB) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
 			jwtHeader := infrastructure.GetConfigString("jwt.header")
@@ -42,7 +44,9 @@ func JwtAuth(logger *infrastructure.Logger) func(http.Handler) http.Handler {
 				utils.ResponseJSON(w, http.StatusUnauthorized, DefaultUnauthorizedResponse())
 				return
 			}
-			ctx := context.WithValue(r.Context(), auth.ContextKeyAuth, user)
+			userModel := model.User{}
+			db.Model(&userModel).Select(`id, user_name, email`).Where(`id=? AND user_name=? AND email=?`, user.ID, user.UserName, user.Email).Scan(&userModel)
+			ctx := context.WithValue(r.Context(), auth.ContextKeyAuth, userModel)
 			r = r.WithContext(ctx)
 			next.ServeHTTP(w, r)
 		}

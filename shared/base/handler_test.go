@@ -18,7 +18,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type User struct {
+type UserTest struct {
 	Name string `form:"name" json:"name" validate:"required"`
 	Pass string `form:"pass" json:"pass" validate:"required"`
 }
@@ -50,7 +50,7 @@ func TestHandlerParse(t *testing.T) {
 	req, _ := http.NewRequest("POST", "/", body)
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
-	user := User{}
+	user := UserTest{}
 	err := bh.Parse(req, &user)
 	assert.Equal(t, "circle", user.Name)
 	assert.Equal(t, "pass", user.Pass)
@@ -74,7 +74,7 @@ func TestHandlerParseForm(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/?name=circle&pass=pass", nil)
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
-	user := User{}
+	user := UserTest{}
 	bh.ParseForm(req, &user)
 	assert.Equal(t, "circle", user.Name)
 
@@ -91,7 +91,7 @@ func TestHandlerMultipartParse(t *testing.T) {
 	req, _ := http.NewRequest("POST", "/", body)
 	req.Header.Set("Content-Type", w.FormDataContentType())
 
-	user := User{}
+	user := UserTest{}
 	err := bh.ParseMultipart(req, &user)
 	assert.Equal(t, "circle", user.Name)
 	assert.Equal(t, "pass", user.Pass)
@@ -184,7 +184,7 @@ func TestHandlerGetRandomFileName(t *testing.T) {
 }
 
 func TestHandlerResponseJson(t *testing.T) {
-	user := User{
+	user := UserTest{
 		"circle",
 		"password",
 	}
@@ -208,7 +208,7 @@ func TestHandlerResponseJson(t *testing.T) {
 	defer res.Body.Close()
 
 	buf, _ := ioutil.ReadAll(res.Body)
-	resUser := User{}
+	resUser := UserTest{}
 	json.Unmarshal(buf, &resUser)
 	assert.Equal(t, "application/json", res.Header.Get("Content-Type"))
 	assert.Equal(t, user.Name, resUser.Name)
@@ -241,7 +241,7 @@ func TestHandlerStatusRedirect(t *testing.T) {
 }
 
 func TestHandlerStatusBadRequest(t *testing.T) {
-	user := User{
+	user := UserTest{
 		"circle",
 		"password",
 	}
@@ -264,7 +264,7 @@ func TestHandlerStatusBadRequest(t *testing.T) {
 	assert.Equal(t, http.StatusBadRequest, rec.Code)
 	assert.Equal(t, "application/json", rec.Header().Get("Content-Type"))
 
-	resUser := User{}
+	resUser := UserTest{}
 	json.Unmarshal(rec.Body.Bytes(), &resUser)
 	assert.NotEmpty(t, user)
 	assert.Equal(t, user.Name, resUser.Name)
@@ -272,7 +272,7 @@ func TestHandlerStatusBadRequest(t *testing.T) {
 }
 
 func TestHandlerStatusNotFoundRequest(t *testing.T) {
-	user := User{
+	user := UserTest{
 		"circle",
 		"password",
 	}
@@ -295,7 +295,7 @@ func TestHandlerStatusNotFoundRequest(t *testing.T) {
 
 		assert.Equal(t, http.StatusNotFound, rec.Code)
 		assert.Equal(t, "application/json", rec.Header().Get("Content-Type"))
-		resUser := User{}
+		resUser := UserTest{}
 		json.Unmarshal(rec.Body.Bytes(), &resUser)
 		assert.Equal(t, user.Name, resUser.Name)
 		assert.Equal(t, user.Pass, resUser.Pass)
@@ -340,7 +340,7 @@ func TestHandlerStatusServerError(t *testing.T) {
 	})
 
 	t.Run("status server error with body", func(t *testing.T) {
-		user := User{
+		user := UserTest{
 			"circle",
 			"password",
 		}
@@ -363,7 +363,7 @@ func TestHandlerStatusServerError(t *testing.T) {
 		assert.Equal(t, http.StatusInternalServerError, rec.Code)
 		assert.Equal(t, "application/json", rec.Header().Get("Content-Type"))
 
-		resUser := User{}
+		resUser := UserTest{}
 		json.Unmarshal(rec.Body.Bytes(), &resUser)
 		assert.Equal(t, user.Name, resUser.Name)
 		assert.Equal(t, user.Pass, resUser.Pass)
@@ -413,7 +413,7 @@ func TestHandlerGetFileHeaderContentType(t *testing.T) {
 }
 func TestHandlerValidatorFunc(t *testing.T) {
 	t.Run("validate success", func(t *testing.T) {
-		user := User{
+		user := UserTest{
 			Name: "username",
 			Pass: "pass",
 		}
@@ -426,7 +426,7 @@ func TestHandlerValidatorFunc(t *testing.T) {
 		assert.NoError(t, err)
 	})
 	t.Run("validate faild", func(t *testing.T) {
-		user := User{
+		user := UserTest{
 			Pass: "password",
 		}
 		// base handler

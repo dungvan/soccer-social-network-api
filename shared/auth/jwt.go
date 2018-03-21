@@ -6,13 +6,16 @@ import (
 
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/dungvan2512/socker-social-network/infrastructure"
+	"github.com/dungvan2512/socker-social-network/model"
 	"github.com/dungvan2512/socker-social-network/shared/utils"
 	"github.com/mitchellh/mapstructure"
 )
 
 // UserAuth user auth
 type UserAuth struct {
-	ID uint64 `json:"id"`
+	ID       uint64 `json:"id"`
+	UserName string `json:"user_name"`
+	Email    string `json:"email"`
 }
 type context struct {
 	User UserAuth `json:"user"`
@@ -98,6 +101,6 @@ type payload struct {
 }
 
 // GetUserFromContext get user id from context
-func GetUserFromContext(c rqContext.Context) UserAuth {
-	return c.Value(ContextKeyAuth).(UserAuth)
+func GetUserFromContext(c rqContext.Context) model.User {
+	return c.Value(ContextKeyAuth).(model.User)
 }

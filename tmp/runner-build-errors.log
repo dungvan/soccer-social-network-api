@@ -1,0 +1,4 @@
+# github.com/dungvan2512/socker-social-network/router
+router/router.go:52:39: not enough arguments in call to "github.com/dungvan2512/socker-social-network/shared/middleware".JwtAuth
+	have (*infrastructure.Logger)
+	want (*infrastructure.Logger, *gorm.DB)
