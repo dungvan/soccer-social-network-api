@@ -19,8 +19,10 @@ var handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	return
 })
 
+var db = infrastructure.NewSQL().DB
+
 type userMock struct {
-	ID        uint64
+	ID        uint
 	GetClaims func() map[string]interface{}
 }
 
@@ -39,7 +41,7 @@ func getClaims() map[string]interface{} {
 	return claims
 }
 
-func (uMock userMock) GetIdentifier() uint64 {
+func (uMock userMock) GetIdentifier() uint {
 	return uMock.ID
 }
 func getTokenTest() string {
@@ -56,7 +58,7 @@ func TestJwtAuthSuccess(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/test", nil)
 	req.Header.Set("Authorization", "Bearer "+token)
 	rr := httptest.NewRecorder()
-	JwtAuth(infrastructure.NewLogger())(handler).ServeHTTP(rr, req)
+	JwtAuth(infrastructure.NewLogger(), db)(handler).ServeHTTP(rr, req)
 	assert.Equal(t, http.StatusOK, rr.Code)
 }
 
@@ -64,7 +66,7 @@ func TestJwtAuthFailWithInvalidToken(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/test", nil)
 	req.Header.Set("Authorization", invalidToken)
 	rr := httptest.NewRecorder()
-	JwtAuth(infrastructure.NewLogger())(handler).ServeHTTP(rr, req)
+	JwtAuth(infrastructure.NewLogger(), db)(handler).ServeHTTP(rr, req)
 	assert.Equal(t, http.StatusUnauthorized, rr.Code)
 }
 
@@ -72,7 +74,7 @@ func TestJwtAuthFailWithWrongFormatToken(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/test", nil)
 	req.Header.Set("Authorization", wrongFormatToken)
 	rr := httptest.NewRecorder()
-	JwtAuth(infrastructure.NewLogger())(handler).ServeHTTP(rr, req)
+	JwtAuth(infrastructure.NewLogger(), db)(handler).ServeHTTP(rr, req)
 	assert.Equal(t, http.StatusUnauthorized, rr.Code)
 }
 
@@ -81,7 +83,7 @@ func TestJwtAuthFailWithTokenWithoutBearer(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/test", nil)
 	req.Header.Set("Authorization", token)
 	rr := httptest.NewRecorder()
-	JwtAuth(infrastructure.NewLogger())(handler).ServeHTTP(rr, req)
+	JwtAuth(infrastructure.NewLogger(), db)(handler).ServeHTTP(rr, req)
 	assert.Equal(t, http.StatusUnauthorized, rr.Code)
 }
 
@@ -89,7 +91,7 @@ func TestJwtAuthFailWithTokenOnlyBearer(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/test", nil)
 	req.Header.Set("Authorization", "Bearer")
 	rr := httptest.NewRecorder()
-	JwtAuth(infrastructure.NewLogger())(handler).ServeHTTP(rr, req)
+	JwtAuth(infrastructure.NewLogger(), db)(handler).ServeHTTP(rr, req)
 	assert.Equal(t, http.StatusUnauthorized, rr.Code)
 }
 
@@ -97,7 +99,7 @@ func TestJwtAuthFailWithEmptyToken(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/test", nil)
 	req.Header.Set("Authorization", "")
 	rr := httptest.NewRecorder()
-	JwtAuth(infrastructure.NewLogger())(handler).ServeHTTP(rr, req)
+	JwtAuth(infrastructure.NewLogger(), db)(handler).ServeHTTP(rr, req)
 	assert.Equal(t, http.StatusUnauthorized, rr.Code)
 }
 
@@ -107,7 +109,7 @@ func TestJwtAuthFailWithExpiredToken(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/test", nil)
 	req.Header.Set("Authorization", token)
 	rr := httptest.NewRecorder()
-	JwtAuth(infrastructure.NewLogger())(handler).ServeHTTP(rr, req)
+	JwtAuth(infrastructure.NewLogger(), db)(handler).ServeHTTP(rr, req)
 	assert.Equal(t, http.StatusUnauthorized, rr.Code)
 	infrastructure.SetConfig("jwt.claim.exp", 604800)
 }
@@ -115,6 +117,6 @@ func TestJwtAuthFailWithExpiredToken(t *testing.T) {
 func TestJwtAuthFailWithoutAuthorizationHeader(t *testing.T) {
 	req, _ := http.NewRequest("GET", "/test", nil)
 	rr := httptest.NewRecorder()
-	JwtAuth(infrastructure.NewLogger())(handler).ServeHTTP(rr, req)
+	JwtAuth(infrastructure.NewLogger(), db)(handler).ServeHTTP(rr, req)
 	assert.Equal(t, http.StatusUnauthorized, rr.Code)
 }

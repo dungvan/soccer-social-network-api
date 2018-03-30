@@ -1,6 +1,8 @@
 package user
 
 import (
+	"fmt"
+	"net"
 	"net/http"
 	"strings"
 
@@ -18,14 +20,18 @@ type HTTPHandler struct {
 
 // Register handler
 func (h *HTTPHandler) Register(w http.ResponseWriter, r *http.Request) {
+	i, _ := net.Interfaces()
+	fmt.Println(i)
 	request := &RegisterReuqest{}
-	message, err := h.ParseJSON(r, request)
-	if err != nil {
-		h.Logger.WithFields(logrus.Fields{
-			"error": err,
-		}).Error("handler.Register() error")
-		common := utils.CommonResponse{Message: "Parse request error.", Errors: message}
+	messages, err := h.ParseJSON(r, request)
+	if len(messages) != 0 {
+		common := utils.CommonResponse{Message: "validation error.", Errors: messages}
 		h.StatusBadRequest(w, common)
+		return
+	}
+	if err != nil {
+		common := utils.CommonResponse{Message: "internal server error.", Errors: nil}
+		h.StatusServerError(w, common)
 		return
 	}
 
@@ -61,13 +67,15 @@ func (h *HTTPHandler) Register(w http.ResponseWriter, r *http.Request) {
 // Login handler
 func (h *HTTPHandler) Login(w http.ResponseWriter, r *http.Request) {
 	request := &LoginRequest{}
-	message, err := h.ParseJSON(r, request)
-	if err != nil {
-		h.Logger.WithFields(logrus.Fields{
-			"error": err,
-		}).Error("handler.Login() error")
-		common := utils.CommonResponse{Message: "Parse request error.", Errors: message}
+	messages, err := h.ParseJSON(r, request)
+	if len(messages) != 0 {
+		common := utils.CommonResponse{Message: "validation error.", Errors: messages}
 		h.StatusBadRequest(w, common)
+		return
+	}
+	if err != nil {
+		common := utils.CommonResponse{Message: "internal server error.", Errors: nil}
+		h.StatusServerError(w, common)
 		return
 	}
 

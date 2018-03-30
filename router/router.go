@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/dungvan2512/socker-social-network/infrastructure"
+	"github.com/dungvan2512/socker-social-network/post"
 	module "github.com/dungvan2512/socker-social-network/sample-module"
 	"github.com/dungvan2512/socker-social-network/shared/base"
 	mMiddleware "github.com/dungvan2512/socker-social-network/shared/middleware"
@@ -51,6 +52,8 @@ func (r *Router) SetupHandler() {
 	mh := module.NewHTTPHandler(bh, bu, br, r.SQLHandler, r.CacheHandler)
 	// user set
 	uh := user.NewHTTPHandler(bh, bu, br, r.SQLHandler, r.CacheHandler)
+	// post set
+	ph := post.NewHTTPHandler(bh, bu, br, r.SQLHandler, r.CacheHandler)
 	// authentication middleware.
 	// authMiddleware := mMiddleware.JwtAuth(r.LoggerHandler, r.SQLHandler.DB)
 	r.Mux.Route("/", func(cr chi.Router) {
@@ -60,5 +63,9 @@ func (r *Router) SetupHandler() {
 	r.Mux.Route("/users", func(cr chi.Router) {
 		cr.Post("/register", uh.Register)
 		cr.Post("/login", uh.Login)
+	})
+
+	r.Mux.Route("/posts", func(cr chi.Router) {
+		cr.With(mMiddleware.JwtAuth(r.LoggerHandler, r.SQLHandler.DB)).Post("/create", ph.Create)
 	})
 }

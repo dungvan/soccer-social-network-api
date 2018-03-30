@@ -21,7 +21,6 @@ var (
 func RequiredIf(fl v.FieldLevel) bool {
 	currentValue, currentKind, _ := fl.ExtractType(fl.Field())
 	reflValue, reflKind, _ := fl.GetStructFieldOK()
-
 	// The both fields are available
 	if HasValue(currentValue, currentValue.Type(), currentKind) {
 		return true
@@ -169,4 +168,8 @@ func maxArrayLen(fl v.FieldLevel) bool {
 
 func sourceIMName(fl v.FieldLevel) bool {
 	return sourceIMNameRegex.MatchString(fl.Field().String())
+}
+
+func sourceVideoName(fl v.FieldLevel) bool {
+	return sourceVideoNameRegex.MatchString(fl.Field().String())
 }

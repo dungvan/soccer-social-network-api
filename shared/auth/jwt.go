@@ -14,8 +14,8 @@ import (
 // UserAuth user auth
 type UserAuth struct {
 	ID       uint64 `json:"id"`
-	UserName string `json:"user_name"`
 	Email    string `json:"email"`
+	UserName string `json:"user_name"`
 }
 type context struct {
 	User UserAuth `json:"user"`
@@ -52,7 +52,7 @@ func ParseToken(tokenString string) (user UserAuth, err error) {
 		if err != nil {
 			err = utils.ErrorsNew("can't decode claims")
 		}
-		return claim.Context.User, nil
+		return claim.Context.User, err
 	}
 	err = utils.ErrorsNew("No claims token")
 	return UserAuth{}, err

@@ -45,7 +45,7 @@ func JwtAuth(logger *infrastructure.Logger, db *gorm.DB) func(http.Handler) http
 				return
 			}
 			userModel := model.User{}
-			db.Model(&userModel).Select(`id, user_name, email`).Where(`id=? AND user_name=? AND email=?`, user.ID, user.UserName, user.Email).Scan(&userModel)
+			err = db.Where(`id=?`, user.ID).Where("email = ?", user.Email).First(&userModel).Error
 			ctx := context.WithValue(r.Context(), auth.ContextKeyAuth, userModel)
 			r = r.WithContext(ctx)
 			next.ServeHTTP(w, r)

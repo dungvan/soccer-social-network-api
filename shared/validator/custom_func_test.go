@@ -603,7 +603,7 @@ func TestIntArrayLenFunc(t *testing.T) {
 	}
 }
 
-func TestSourceIMNameReturnTrue(t *testing.T) {
+func TestSourceIMNameAndSourceVideoNameReturnTrue(t *testing.T) {
 	type args struct {
 		fl v.FieldLevel
 	}
@@ -621,14 +621,15 @@ func TestSourceIMNameReturnTrue(t *testing.T) {
 	for _, v := range caseTrue {
 		t.Run("test return TRUE with value "+v, func(t *testing.T) {
 
-			args := args{&fieldLevelMock{
-				field: reflect.ValueOf(v),
-			},
+			args := args{
+				&fieldLevelMock{
+					field: reflect.ValueOf(v),
+				},
 			}
-			got := sourceIMName(args.fl)
-			{
-				assert.True(t, got)
-			}
+			gotIM := sourceIMName(args.fl)
+			gotVideo := sourceVideoName(args.fl)
+			assert.True(t, gotIM)
+			assert.True(t, gotVideo)
 		})
 	}
 }
