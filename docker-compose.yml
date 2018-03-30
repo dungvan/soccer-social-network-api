@@ -12,8 +12,8 @@ services:
         volumes:
         - object-vol:/export
         environment:
-        - "MINIO_ACCESS_KEY=AKIAIOSFODNN7EXAMPLE"
-        - "MINIO_SECRET_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+        - "MINIO_ACCESS_KEY=DUNGVANEXAMPLE"
+        - "MINIO_SECRET_KEY=DUNGVANEXAMPLE"
         command: server /export
         container_name: storage-cont
     db:

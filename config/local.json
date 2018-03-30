@@ -30,8 +30,8 @@
         "endpoint": "50164d3d.ngrok.io",
         "region": "ap-northeast-1",
         "bucketname": "item",
-        "accesskey": "AKIAIOSFODNN7EXAMPLE",
-        "secretkey": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+        "accesskey": "DUNGVANEXAMPLE",
+        "secretkey": "DUNGVANEXAMPLE",
         "secure": false
     },
     "jwt": {
