@@ -23,7 +23,7 @@ func (h *HTTPHandler) Register(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		h.Logger.WithFields(logrus.Fields{
 			"error": err,
-		}).Error("usecase.Register() error")
+		}).Error("handler.Register() error")
 		common := utils.CommonResponse{Message: "Parse request error.", Errors: message}
 		h.StatusBadRequest(w, common)
 		return
@@ -56,6 +56,46 @@ func (h *HTTPHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	h.ResponseJSON(w, utils.CommonResponse{Message: "Register successfully.", Errors: nil})
+}
+
+// Login handler
+func (h *HTTPHandler) Login(w http.ResponseWriter, r *http.Request) {
+	request := &LoginRequest{}
+	message, err := h.ParseJSON(r, request)
+	if err != nil {
+		h.Logger.WithFields(logrus.Fields{
+			"error": err,
+		}).Error("handler.Login() error")
+		common := utils.CommonResponse{Message: "Parse request error.", Errors: message}
+		h.StatusBadRequest(w, common)
+		return
+	}
+
+	// validate get data.
+	if err = h.Validate(w, request); err != nil {
+		return
+	}
+
+	token, err := h.usecase.Login(*request)
+	if err != nil {
+		if err == errUserNameOrPassword {
+			h.Logger.WithFields(logrus.Fields{
+				"error": err,
+			}).Error("usecase.Login() error")
+			common := utils.CommonResponse{Message: "Login failed.", Errors: []string{err.Error()}}
+			h.StatusBadRequest(w, common)
+			return
+		}
+		h.Logger.WithFields(logrus.Fields{
+			"error": err,
+		}).Error("usecase.Login() error")
+		common := utils.CommonResponse{Message: "Internal server error.", Errors: nil}
+		h.StatusServerError(w, common)
+		return
+	}
+
+	response := LoginResponse{Token: token}
+	h.ResponseJSON(w, response)
 }
 
 // NewHTTPHandler responses new HTTPHandler instance.

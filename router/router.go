@@ -59,5 +59,6 @@ func (r *Router) SetupHandler() {
 
 	r.Mux.Route("/users", func(cr chi.Router) {
 		cr.Post("/register", uh.Register)
+		cr.Post("/login", uh.Login)
 	})
 }

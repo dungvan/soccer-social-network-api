@@ -8,20 +8,20 @@ import (
 )
 
 type jwtObjectmock struct {
-	ID        uint64
+	ID        uint
 	GetClaims func() map[string]interface{}
 }
 
 func (mock jwtObjectmock) GetCustomClaims() map[string]interface{} {
 	return mock.GetClaims()
 }
-func (mock jwtObjectmock) GetIdentifier() uint64 {
+func (mock jwtObjectmock) GetIdentifier() uint {
 	return mock.ID
 }
 
 func setUpClaims() map[string]interface{} {
 	userclaim := struct {
-		ID uint64 `json:"id"`
+		ID uint `json:"id"`
 	}{
 		ID: 123,
 	}

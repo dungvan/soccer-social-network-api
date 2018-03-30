@@ -61,7 +61,7 @@ func ParseToken(tokenString string) (user UserAuth, err error) {
 // JWTObject interface
 type JWTObject interface {
 	GetCustomClaims() map[string]interface{}
-	GetIdentifier() uint64
+	GetIdentifier() uint
 }
 
 // GenerateToken Generate token
@@ -70,7 +70,7 @@ func GenerateToken(object JWTObject) (accessToken string, err error) {
 		err = utils.ErrorsNew("Object is nil")
 		return
 	}
-	emptyID := uint64(0)
+	emptyID := uint(0)
 	if object.GetIdentifier() == emptyID {
 		err = utils.ErrorsNew("Object is empty")
 		return
