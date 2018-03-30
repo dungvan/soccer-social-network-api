@@ -41,8 +41,11 @@ func (u *usecase) Login(l LoginRequest) (string, error) {
 	} else {
 		user, err = u.repository.FindUserByUserName(l.UserNameOrEmail)
 	}
-	if err == gorm.ErrRecordNotFound {
-		return "", errUserNameOrPassword
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return "", errUserNameOrPassword
+		}
+		return "", err
 	}
 	if ok := u.repository.CheckLogin(*user, l.Password); ok {
 		// store user to JWT

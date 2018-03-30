@@ -7,6 +7,7 @@ import (
 	"github.com/dungvan2512/socker-social-network/shared/auth"
 	"github.com/dungvan2512/socker-social-network/shared/base"
 	"github.com/dungvan2512/socker-social-network/shared/utils"
+	"github.com/sirupsen/logrus"
 )
 
 // HTTPHandler struct
@@ -30,23 +31,22 @@ func (h *HTTPHandler) Create(w http.ResponseWriter, r *http.Request) {
 		h.StatusServerError(w, common)
 		return
 	}
-	request.UserID = auth.GetUserFromContext(r.Context()).ID
+	request.User = auth.GetUserFromContext(r.Context())
 	// validate get data.
 	if err = h.Validate(w, request); err != nil {
 		return
 	}
 
-	// err = h.usecase.PostOutfitDetail(request)
-	// if err != nil {
-	// 	h.Logger.WithFields(logrus.Fields{
-	// 		"error": err,
-	// 	}).Error("usecaseInterface.PostOutfitDetail() error")
-	// 	common := CommonResponse{Message: "internal server error.", Errors: nil}
-	// 	h.StatusServerError(w, common)
-	// 	return
-	// }
-	// w.WriteHeader(http.StatusOK)
-	return
+	postID, err := h.usecase.Create(request)
+	if err != nil {
+		h.Logger.WithFields(logrus.Fields{
+			"error": err,
+		}).Error("usecase.Create() error")
+		common := utils.CommonResponse{Message: "internal server error.", Errors: nil}
+		h.StatusServerError(w, common)
+		return
+	}
+	h.ResponseJSON(w, CreatePostResponse{postID})
 }
 
 // NewHTTPHandler return new HTTPHandler instance.
