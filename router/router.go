@@ -7,6 +7,7 @@ import (
 	module "github.com/dungvan2512/socker-social-network/sample-module"
 	"github.com/dungvan2512/socker-social-network/shared/base"
 	mMiddleware "github.com/dungvan2512/socker-social-network/shared/middleware"
+	"github.com/dungvan2512/socker-social-network/user"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 )
@@ -46,11 +47,17 @@ func (r *Router) SetupHandler() {
 	br := base.NewRepository(r.LoggerHandler.Log)
 	// base set.
 	bu := base.NewUsecase(r.LoggerHandler.Log)
-	// outfit set.
+	// sample set.
 	mh := module.NewHTTPHandler(bh, bu, br, r.SQLHandler, r.CacheHandler)
+	// user set
+	uh := user.NewHTTPHandler(bh, bu, br, r.SQLHandler, r.CacheHandler)
 	// authentication middleware.
 	// authMiddleware := mMiddleware.JwtAuth(r.LoggerHandler, r.SQLHandler.DB)
 	r.Mux.Route("/", func(cr chi.Router) {
 		cr.Get("/sample", mh.SampleHandler)
+	})
+
+	r.Mux.Route("/users", func(cr chi.Router) {
+		cr.Post("/register", uh.Register)
 	})
 }

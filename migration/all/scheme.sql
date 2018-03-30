@@ -10,8 +10,8 @@ DROP TABLE IF EXISTS "user";
 CREATE TABLE "user"
 (
 	id serial NOT NULL UNIQUE,
-	user_name VARCHAR(32),
-	email VARCHAR(256),
+	user_name VARCHAR(32) UNIQUE,
+	email VARCHAR(256) UNIQUE,
 	password VARCHAR(256),
 	full_name VARCHAR(256),
 	birthday DATE,
