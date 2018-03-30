@@ -66,6 +66,9 @@ func (r *Router) SetupHandler() {
 	})
 
 	r.Mux.Route("/posts", func(cr chi.Router) {
-		cr.With(mMiddleware.JwtAuth(r.LoggerHandler, r.SQLHandler.DB)).Post("/", ph.Create)
+		cr.With(mMiddleware.JwtAuth(r.LoggerHandler, r.SQLHandler.DB)).Route("/", func(cr chi.Router) {
+			cr.Get("/", ph.Index)
+			cr.Post("/", ph.Create)
+		})
 	})
 }

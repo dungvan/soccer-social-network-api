@@ -16,6 +16,21 @@ type HTTPHandler struct {
 	usecase Usecase
 }
 
+// Index handler
+func (h *HTTPHandler) Index(w http.ResponseWriter, r *http.Request) {
+	user := auth.GetUserFromContext(r.Context())
+	resp, err := h.usecase.Index(user.ID)
+	if err != nil {
+		h.Logger.WithFields(logrus.Fields{
+			"error": err,
+		}).Error("usecase.Index() error")
+		common := utils.CommonResponse{Message: "internal server error.", Errors: nil}
+		h.StatusServerError(w, common)
+		return
+	}
+	h.ResponseJSON(w, resp)
+}
+
 // Create a post Handler
 func (h *HTTPHandler) Create(w http.ResponseWriter, r *http.Request) {
 	// mapping post to struct.
@@ -46,7 +61,7 @@ func (h *HTTPHandler) Create(w http.ResponseWriter, r *http.Request) {
 		h.StatusServerError(w, common)
 		return
 	}
-	h.ResponseJSON(w, CreatePostResponse{postID})
+	h.ResponseJSON(w, CreateResponse{postID})
 }
 
 // NewHTTPHandler return new HTTPHandler instance.

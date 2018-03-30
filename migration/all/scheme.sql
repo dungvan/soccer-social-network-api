@@ -29,8 +29,6 @@ CREATE TABLE post
 	id serial NOT NULL UNIQUE,
 	user_id int NOT NULL,
 	caption text,
-	source_image_file_name varchar(272),
-	source_video_file_name varchar(256),
 	location_id int,
 	created_at timestamp,
 	updated_at timestamp,
@@ -71,6 +69,46 @@ CREATE TABLE post_hashtags
 
 ALTER SEQUENCE post_hashtags_id_SEQ INCREMENT 1 RESTART 1;
 
+CREATE TABLE image_name
+(
+	id serial NOT NULL UNIQUE,
+	source_image_file_name varchar(272),
+	PRIMARY KEY (id)
+) WITHOUT OIDS;
+
+ALTER SEQUENCE image_name_id_SEQ INCREMENT 1 RESTART 1;
+
+CREATE TABLE post_image_name
+(
+	id serial NOT NULL UNIQUE,
+	post_id int NOT NULL,
+	image_name_id int NOT NULL,
+	PRIMARY KEY (id),
+	CONSTRAINT post_image_name_post_id_image_name_id_UNIQUE UNIQUE (post_id, image_name_id)
+) WITHOUT OIDS;
+
+ALTER SEQUENCE post_image_name_id_SEQ INCREMENT 1 RESTART 1;
+
+CREATE TABLE video_name
+(
+	id serial NOT NULL UNIQUE,
+	source_video_file_name varchar(272),
+	PRIMARY KEY (id)
+) WITHOUT OIDS;
+
+ALTER SEQUENCE video_name_id_SEQ INCREMENT 1 RESTART 1;
+
+CREATE TABLE post_video_name
+(
+	id serial NOT NULL UNIQUE,
+	post_id int NOT NULL,
+	video_name_id int NOT NULL,
+	PRIMARY KEY (id),
+	CONSTRAINT post_video_name_post_id_video_name_id_UNIQUE UNIQUE (post_id, video_name_id)
+) WITHOUT OIDS;
+
+ALTER SEQUENCE post_video_name_id_SEQ INCREMENT 1 RESTART 1;
+
 ALTER TABLE post
 	ADD FOREIGN KEY (user_id)
 	REFERENCES "user" (id)
@@ -95,6 +133,34 @@ ALTER TABLE post_hashtags
 ALTER TABLE post_hashtags
 	ADD FOREIGN KEY (hashtag_id)
 	REFERENCES "hashtag" (id)
+	ON UPDATE RESTRICT
+	ON DELETE RESTRICT
+;
+
+ALTER TABLE post_image_name
+	ADD FOREIGN KEY (post_id)
+	REFERENCES "post" (id)
+	ON UPDATE RESTRICT
+	ON DELETE RESTRICT
+;
+
+ALTER TABLE post_image_name
+	ADD FOREIGN KEY (image_name_id)
+	REFERENCES "image_name" (id)
+	ON UPDATE RESTRICT
+	ON DELETE RESTRICT
+;
+
+ALTER TABLE post_video_name
+	ADD FOREIGN KEY (post_id)
+	REFERENCES "post" (id)
+	ON UPDATE RESTRICT
+	ON DELETE RESTRICT
+;
+
+ALTER TABLE post_video_name
+	ADD FOREIGN KEY (video_name_id)
+	REFERENCES "video_name" (id)
 	ON UPDATE RESTRICT
 	ON DELETE RESTRICT
 ;

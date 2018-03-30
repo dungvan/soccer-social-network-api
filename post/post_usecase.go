@@ -11,6 +11,8 @@ import (
 
 // Usecase interface
 type Usecase interface {
+	// Index usecase
+	Index(userID uint) (IndexResponse, error)
 	// Create a post
 	Create(r CreateRequest) (postID uint, err error)
 }
@@ -19,6 +21,45 @@ type usecase struct {
 	base.Usecase
 	db         *gorm.DB
 	repository Repository
+}
+
+func (u *usecase) Index(userID uint) (IndexResponse, error) {
+	indexResp := IndexResponse{}
+	result, err := u.repository.GetAllPostsByUserID(userID)
+	if err != nil {
+		return indexResp, utils.ErrorsWrap(err, "repository.GetAllPostsByUserID() error.")
+	}
+	indexResp.ResultCount = len(result)
+	indexResp.Posts = []RespPost{}
+
+	// bucketName := infrastructure.GetConfigString("objectstorage.bucketname")
+	for _, post := range result {
+		data := RespPost{
+			ID:      post.ID,
+			UserID:  userID,
+			Caption: post.Caption,
+			SourceImageURL: func() []interface{} {
+				output := []interface{}{}
+				// if post.SourceImageFileName != nil && len(post.SourceImageFileName) > 0 {
+				// 	for _, imageName := range post.SourceImageFileName {
+				// 		imageurl := utils.GetStorageURL(infrastructure.Storage, infrastructure.Endpoint, infrastructure.Secure, bucketName, utils.GetObjectPath(infrastructure.Storage, S3ImagePath, imageName), infrastructure.Region)
+				// 		output = append(output, imageurl)
+				// 	}
+				// }
+				return output
+			}(),
+			SourceVideoURL: func() []interface{} {
+				output := []interface{}{}
+				// for _, videoName := range post.SourceImageFileName {
+				// 	videourl := utils.GetStorageURL(infrastructure.Storage, infrastructure.Endpoint, infrastructure.Secure, bucketName, utils.GetObjectPath(infrastructure.Storage, S3ImagePath, videoName), infrastructure.Region)
+				// 	output = append(output, videourl)
+				// }
+				return output
+			}(),
+		}
+		indexResp.Posts = append(indexResp.Posts, data)
+	}
+	return indexResp, err
 }
 
 func (u *usecase) Create(r CreateRequest) (uint, error) {
@@ -35,10 +76,10 @@ func (u *usecase) Create(r CreateRequest) (uint, error) {
 	if r.PlaceID != "" {
 
 	}
-	if r.SourceImageFileName != "" {
+	if r.SourceImageFileName != nil {
 
 	}
-	if r.SourceVideoFileName != "" {
+	if r.SourceVideoFileName != nil {
 
 	}
 	postResponse, err := u.repository.CreatePost(post, tx)

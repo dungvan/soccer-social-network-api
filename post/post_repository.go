@@ -12,6 +12,8 @@ import (
 
 // Repository interface
 type Repository interface {
+	// GetAllPostsByUserID return all of post record
+	GetAllPostsByUserID(userID uint) ([]model.Post, error)
 	// CreatePost registers record to table post
 	CreatePost(post model.Post, transaction *gorm.DB) (*model.Post, error)
 	// CreateHashtags is insert hashtag list into hashtag table if it does not exist.
@@ -26,6 +28,16 @@ type repository struct {
 	base.Repository
 	db    *gorm.DB
 	redis *redis.Conn
+}
+
+func (r *repository) GetAllPostsByUserID(userID uint) ([]model.Post, error) {
+	posts := make([]model.Post, 0)
+	err := r.db.Model(&model.Post{}).
+		Select("id, caption, source_image_file_name, source_video_file_name, created_at").Where("user_id = ?", userID).
+		Limit(100).
+		Order("created_at desc, id desc").
+		Scan(&posts).Error
+	return posts, utils.ErrorsWrap(err, "can't get post.")
 }
 
 func (r *repository) CreatePost(p model.Post, tx *gorm.DB) (*model.Post, error) {
