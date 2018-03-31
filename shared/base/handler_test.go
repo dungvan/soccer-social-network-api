@@ -107,7 +107,7 @@ func TestHandlerMultipartParse(t *testing.T) {
 
 func TestHandlerSaveToFile(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
-		sampleFile := os.Getenv("FR_CIRCLE_API_DIR") + "/test/data/sample.txt"
+		sampleFile := os.Getenv("SSN_API_DIR") + "/test/data/sample.txt"
 
 		bh := NewHTTPHandler(infrastructure.NewLogger().Log)
 
@@ -136,7 +136,7 @@ func TestHandlerSaveToFile(t *testing.T) {
 		assert.Error(t, err)
 	})
 	t.Run("failed by nothing tofile", func(t *testing.T) {
-		sampleFile := os.Getenv("FR_CIRCLE_API_DIR") + "/test/data/sample.txt"
+		sampleFile := os.Getenv("SSN_API_DIR") + "/test/data/sample.txt"
 
 		bh := NewHTTPHandler(infrastructure.NewLogger().Log)
 
@@ -152,7 +152,7 @@ func TestHandlerSaveToFile(t *testing.T) {
 		assert.Error(t, err)
 	})
 	t.Run("failed by nil", func(t *testing.T) {
-		sampleFile := os.Getenv("FR_CIRCLE_API_DIR") + "/test/data/sample.txt"
+		sampleFile := os.Getenv("SSN_API_DIR") + "/test/data/sample.txt"
 
 		bh := NewHTTPHandler(infrastructure.NewLogger().Log)
 
@@ -396,7 +396,7 @@ func TestHandlerGetTranslaterFunc(t *testing.T) {
 
 func TestHandlerGetFileHeaderContentType(t *testing.T) {
 	t.Run("get file header content type success", func(t *testing.T) {
-		imageFile := os.Getenv("FR_CIRCLE_API_DIR") + "/test/image/W_ULD_171201_01.jpg"
+		imageFile := os.Getenv("SSN_API_DIR") + "/test/image/W_ULD_171201_01.jpg"
 
 		bh := NewHTTPHandler(infrastructure.NewLogger().Log)
 		f, _ := os.Open(imageFile)
@@ -685,7 +685,7 @@ func TestIsJSONFunc(t *testing.T) {
 
 func TestHTTPHandlerDetectImageDimention(t *testing.T) {
 	t.Run("get image file dimention success", func(t *testing.T) {
-		imageFile := os.Getenv("FR_CIRCLE_API_DIR") + "/test/image/W_ULD_171201_01.jpg"
+		imageFile := os.Getenv("SSN_API_DIR") + "/test/image/W_ULD_171201_01.jpg"
 		f, err := os.Open(imageFile)
 		if err != nil {
 			t.Errorf("could not open image file")
@@ -698,7 +698,7 @@ func TestHTTPHandlerDetectImageDimention(t *testing.T) {
 		assert.True(t, height > 0)
 	})
 	t.Run("arguments is not support type", func(t *testing.T) {
-		imageFile := os.Getenv("FR_CIRCLE_API_DIR") + "/test/txt/FILE_NOT_IMAGE.txt"
+		imageFile := os.Getenv("SSN_API_DIR") + "/test/txt/FILE_NOT_IMAGE.txt"
 		f, err := os.Open(imageFile)
 		if err != nil {
 			t.Errorf("could not open image file")

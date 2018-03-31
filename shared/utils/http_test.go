@@ -13,7 +13,7 @@ import (
 )
 
 func TestMultipartFileWriterOK(t *testing.T) {
-	dir := os.Getenv("FR_CIRCLE_API_DIR")
+	dir := os.Getenv("SSN_API_DIR")
 	imageFilePath := dir + "/test/image/W_ULD_171201_01.jpg"
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
@@ -23,7 +23,7 @@ func TestMultipartFileWriterOK(t *testing.T) {
 }
 
 func TestMultipartFileWriterNGFileOpen(t *testing.T) {
-	dir := os.Getenv("FR_CIRCLE_API_DIR")
+	dir := os.Getenv("SSN_API_DIR")
 	imageFilePath := dir + "/notfoundfile.txt"
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)

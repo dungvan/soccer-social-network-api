@@ -9,7 +9,7 @@ import (
 )
 
 func TestExistsFile(t *testing.T) {
-	dir := os.Getenv("FR_CIRCLE_API_DIR")
+	dir := os.Getenv("SSN_API_DIR")
 	imageFilePath := dir + "/test/image/W_ULD_171201_01.jpg"
 	fmt.Println(imageFilePath)
 	isExsits := ExistsFile(imageFilePath)
@@ -20,7 +20,7 @@ func TestExistsFile(t *testing.T) {
 }
 
 func TestCopyFileOK(t *testing.T) {
-	dir := os.Getenv("FR_CIRCLE_API_DIR")
+	dir := os.Getenv("SSN_API_DIR")
 	srcPath := dir + "/test/image/W_ULD_171201_01.jpg"
 	dstPath := "/tmp/W_ULD_171201_01.jpg"
 
@@ -31,7 +31,7 @@ func TestCopyFileOK(t *testing.T) {
 }
 
 func TestCopyFileCantOpenFile(t *testing.T) {
-	dir := os.Getenv("FR_CIRCLE_API_DIR")
+	dir := os.Getenv("SSN_API_DIR")
 	srcPath := dir + "notfoundfile.txt"
 	dstPath := "/tmp/W_ULD_171201_01.jpg"
 
@@ -40,7 +40,7 @@ func TestCopyFileCantOpenFile(t *testing.T) {
 }
 
 func TestCopyFileCantDstFile(t *testing.T) {
-	dir := os.Getenv("FR_CIRCLE_API_DIR")
+	dir := os.Getenv("SSN_API_DIR")
 	srcPath := dir + "/test/image/W_ULD_171201_01.jpga"
 	dstPath := "/tmp/W_ULD_171201_01.jpg"
 
@@ -56,7 +56,7 @@ func TestCopyFileCantDstFile(t *testing.T) {
 }
 
 func TestReadByteFileOK(t *testing.T) {
-	dir := os.Getenv("FR_CIRCLE_API_DIR")
+	dir := os.Getenv("SSN_API_DIR")
 	imagePath := dir + "/test/image/W_ULD_171201_01.jpg"
 
 	b, err := ReadByteFile(imagePath)
@@ -65,7 +65,7 @@ func TestReadByteFileOK(t *testing.T) {
 }
 
 func TestReadByteFileNG(t *testing.T) {
-	dir := os.Getenv("FR_CIRCLE_API_DIR")
+	dir := os.Getenv("SSN_API_DIR")
 	imagePath := dir + "notfoundfile.txt"
 
 	b, err := ReadByteFile(imagePath)
@@ -74,7 +74,7 @@ func TestReadByteFileNG(t *testing.T) {
 }
 
 func TestFileDetectContentType(t *testing.T) {
-	dir := os.Getenv("FR_CIRCLE_API_DIR")
+	dir := os.Getenv("SSN_API_DIR")
 	type args struct {
 		data []byte
 	}
