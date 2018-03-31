@@ -2,9 +2,15 @@ CREATE DATABASE ssn owner postgres encoding 'utf8';
 \c ssn;
 
 /* Drop Tables */
-
-DROP TABLE IF EXISTS "user";
+DROP TABLE IF EXISTS "post_hashtags";
+DROP TABLE IF EXISTS "hashtag";
+DROP TABLE IF EXISTS "post_image_name";
+DROP TABLE IF EXISTS "image_name";
+DROP TABLE IF EXISTS "post_video_name";
+DROP TABLE IF EXISTS "video_name";
 DROP TABLE IF EXISTS "post";
+DROP TABLE IF EXISTS "user";
+DROP TABLE IF EXISTS "location";
 
 /* Create Tables */
 

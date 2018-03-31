@@ -1,5 +1,7 @@
 package post
 
+import "time"
+
 // CreateResponse struct
 type CreateResponse struct {
 	PostID uint `json:"post_id"`
@@ -18,4 +20,5 @@ type RespPost struct {
 	Caption        string      `json:"caption"`
 	SourceImageURL interface{} `json:"source_image_url"`
 	SourceVideoURL interface{} `json:"source_video_url"`
+	CreatedAt      time.Time   `json:"created_at"`
 }

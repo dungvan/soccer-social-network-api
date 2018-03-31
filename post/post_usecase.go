@@ -56,6 +56,7 @@ func (u *usecase) Index(userID uint) (IndexResponse, error) {
 				// }
 				return output
 			}(),
+			CreatedAt: post.CreatedAt,
 		}
 		indexResp.Posts = append(indexResp.Posts, data)
 	}

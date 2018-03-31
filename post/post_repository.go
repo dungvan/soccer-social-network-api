@@ -33,7 +33,7 @@ type repository struct {
 func (r *repository) GetAllPostsByUserID(userID uint) ([]model.Post, error) {
 	posts := make([]model.Post, 0)
 	err := r.db.Model(&model.Post{}).
-		Select("id, caption, source_image_file_name, source_video_file_name, created_at").Where("user_id = ?", userID).
+		Select("id, caption, created_at").Where("user_id = ?", userID).
 		Limit(100).
 		Order("created_at desc, id desc").
 		Scan(&posts).Error
