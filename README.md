@@ -4,6 +4,8 @@
 ### run local development:
 - build docker
 ```bash
+$ git clone https://github.com/dungvan2512/socker-social-network
+$ cd socker-social-network
 $ docker-compose build
 $ docker-compose up
 ```
