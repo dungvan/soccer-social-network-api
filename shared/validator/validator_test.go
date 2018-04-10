@@ -647,7 +647,33 @@ func TestRegisterCustomValidationIsHashtagFail(t *testing.T) {
 
 func TestValidationSourceIMNamePass(t *testing.T) {
 	type exRequest struct {
-		SourceIMName string `validate:"source_im_name"`
+		SourceIMName string `validate:"image_name"`
+	}
+	caseTrue := []string{
+		"image",
+		"image...___",
+		"image.jpg",
+		"image1.jpg",
+		"image_.jpg",
+		"_image.jpg",
+		"image_1.jpg",
+	}
+
+	for _, v := range caseTrue {
+		t.Run("test return TRUE with value "+v, func(t *testing.T) {
+			caseTest := exRequest{
+				v,
+			}
+			got := New()
+			err := got.Struct(caseTest)
+			assert.Empty(t, err)
+		})
+	}
+}
+
+func TestValidationSourceVideoNamePass(t *testing.T) {
+	type exRequest struct {
+		SourceVideoName string `validate:"video_name"`
 	}
 	caseTrue := []string{
 		"image",
@@ -673,12 +699,11 @@ func TestValidationSourceIMNamePass(t *testing.T) {
 
 func TestValidationSourceIMNameFail(t *testing.T) {
 	type exRequest struct {
-		SourceIMName string `validate:"source_im_name"`
+		SourceIMName string `validate:"image_name"`
 	}
 	caseFalse := []string{
 		" ",
 		"image,.jpg",
-		"image-.jpg",
 		"🤖",
 		"シャツ.jpg",
 		"ViệtNam.jpg",
@@ -692,6 +717,30 @@ func TestValidationSourceIMNameFail(t *testing.T) {
 			got := New()
 			err := got.Struct(caseTest)
 			assert.Equal(t, "SourceIMName", err.(validator.ValidationErrors)[0].Field())
+		})
+	}
+}
+
+func TestValidationSourceVideoNameFail(t *testing.T) {
+	type exRequest struct {
+		SourceVideoName string `validate:"video_name"`
+	}
+	caseFalse := []string{
+		" ",
+		"image,.jpg",
+		"🤖",
+		"シャツ.jpg",
+		"ViệtNam.jpg",
+	}
+
+	for _, v := range caseFalse {
+		t.Run("test return False with value "+v, func(t *testing.T) {
+			caseTest := exRequest{
+				v,
+			}
+			got := New()
+			err := got.Struct(caseTest)
+			assert.Equal(t, "SourceVideoName", err.(validator.ValidationErrors)[0].Field())
 		})
 	}
 }

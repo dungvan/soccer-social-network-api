@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/dungvan2512/socker-social-network/shared/auth"
+
 	"github.com/dungvan2512/socker-social-network/infrastructure"
 	"github.com/dungvan2512/socker-social-network/shared/base"
 	"github.com/dungvan2512/socker-social-network/shared/utils"
@@ -104,6 +106,30 @@ func (h *HTTPHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 	response := LoginResponse{Token: token}
 	h.ResponseJSON(w, response)
+}
+
+// FriendRequest is user request connection to other
+func (h *HTTPHandler) FriendRequest(w http.ResponseWriter, r *http.Request) {
+	request := &FriendRequest{}
+	messages, err := h.ParseJSON(r, request)
+	if len(messages) != 0 {
+		common := utils.CommonResponse{Message: "validation error.", Errors: messages}
+		h.StatusBadRequest(w, common)
+		return
+	}
+
+	if err != nil {
+		common := utils.CommonResponse{Message: "internal server error.", Errors: nil}
+		h.StatusServerError(w, common)
+		return
+	}
+	request.UserID = auth.GetUserFromContext(r.Context()).ID
+
+	// validate get data.
+	if err = h.Validate(w, request); err != nil {
+		return
+	}
+	// call usecase
 }
 
 // NewHTTPHandler responses new HTTPHandler instance.

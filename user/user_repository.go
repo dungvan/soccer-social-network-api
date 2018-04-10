@@ -20,6 +20,10 @@ type Repository interface {
 	CheckLogin(user model.User, password string) bool
 	// GenerateToken for user
 	GenerateToken(*model.User) (token string, err error)
+	// Create user follow
+	CreateUserFollow(userFollow *model.UserFollow) error
+	// DeleteUserFollow
+	DeleteUserFollow(userFollowID uint) error
 }
 
 type repository struct {
@@ -50,6 +54,14 @@ func (r *repository) CheckLogin(user model.User, password string) bool {
 
 func (r *repository) GenerateToken(user *model.User) (token string, err error) {
 	return auth.GenerateToken(user)
+}
+
+func (r *repository) CreateUserFollow(userFollow *model.UserFollow) error {
+	return r.db.Create(&userFollow).Error
+}
+
+func (r *repository) DeleteUserFollow(userFollowID uint) error {
+	return nil
 }
 
 // NewRepository responses new Repository instance.

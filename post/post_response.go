@@ -15,10 +15,17 @@ type IndexResponse struct {
 
 // RespPost struct
 type RespPost struct {
-	ID             uint        `json:"id"`
-	UserID         uint        `json:"user_id"`
-	Caption        string      `json:"caption"`
-	SourceImageURL interface{} `json:"source_image_url"`
-	SourceVideoURL interface{} `json:"source_video_url"`
-	CreatedAt      time.Time   `json:"created_at"`
+	ID        uint        `json:"id"`
+	UserID    uint        `json:"user_id"`
+	Caption   string      `json:"caption"`
+	ImageURLs interface{} `json:"image_url"`
+	VideoURLs interface{} `json:"video_url"`
+	CreatedAt time.Time   `json:"created_at"`
+}
+
+// StarCountResponse responses from CountUpStar and CountDownStar function.
+// JSON responses payload structure
+type StarCountResponse struct {
+	TypeOfStatusCode int  `json:"-"`
+	StarCount        uint `json:"star_count"`
 }

@@ -15,6 +15,8 @@ type Usecase interface {
 	Register(RegisterReuqest) error
 	// Login usecase
 	Login(LoginRequest) (token string, err error)
+	// SendFriendRequest usecase
+	SendFriendRequest(FriendRequest) error
 }
 
 type usecase struct {
@@ -57,6 +59,10 @@ func (u *usecase) Login(l LoginRequest) (string, error) {
 		return "", errUserNameOrPassword
 	}
 	return token, nil
+}
+
+func (u *usecase) SendFriendRequest(FriendRequest) error {
+	return nil
 }
 
 // NewUsecase responses new Usecase instance.

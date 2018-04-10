@@ -511,7 +511,6 @@ func TestSourceIMNameReturnFalse(t *testing.T) {
 	caseFalse := []string{
 		" ",
 		"image,.jpg",
-		"image-.jpg",
 		"🤖",
 		"シャツ.jpg",
 	}
@@ -523,7 +522,7 @@ func TestSourceIMNameReturnFalse(t *testing.T) {
 				field: reflect.ValueOf(v),
 			},
 			}
-			got := sourceIMName(args.fl)
+			got := isImageName(args.fl)
 			{
 				assert.False(t, got)
 			}
@@ -626,8 +625,8 @@ func TestSourceIMNameAndSourceVideoNameReturnTrue(t *testing.T) {
 					field: reflect.ValueOf(v),
 				},
 			}
-			gotIM := sourceIMName(args.fl)
-			gotVideo := sourceVideoName(args.fl)
+			gotIM := isImageName(args.fl)
+			gotVideo := isVideoName(args.fl)
 			assert.True(t, gotIM)
 			assert.True(t, gotVideo)
 		})

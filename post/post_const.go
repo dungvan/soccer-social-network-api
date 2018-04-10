@@ -7,4 +7,10 @@ const (
 	S3VideoPath = S3Path + "/video"
 	// S3ImagePath is folder contains image file
 	S3ImagePath = S3Path + "/image"
+	// Default star count
+	defaultStarCount = 0
+	// Default up a star count
+	upUnit = 1
+	// Default down a star count
+	downUnit = -1
 )

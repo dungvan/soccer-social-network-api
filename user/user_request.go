@@ -15,3 +15,9 @@ type LoginRequest struct {
 	UserNameOrEmail string `json:"user_name_or_email" validate:"required"`
 	Password        string `json:"password" validate:"required"`
 }
+
+// FriendRequest struct
+type FriendRequest struct {
+	UserID     uint `json:"user_id" validate:"required"`
+	UserFollow uint `json:"user_follow" validate:"required"`
+}

@@ -166,10 +166,6 @@ func maxArrayLen(fl v.FieldLevel) bool {
 	return false
 }
 
-func sourceIMName(fl v.FieldLevel) bool {
-	return sourceIMNameRegex.MatchString(fl.Field().String())
-}
-
-func sourceVideoName(fl v.FieldLevel) bool {
-	return sourceVideoNameRegex.MatchString(fl.Field().String())
+func isVideoName(fl v.FieldLevel) bool {
+	return videoNameRegex.MatchString(fl.Field().String())
 }

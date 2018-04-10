@@ -8,16 +8,15 @@ import (
 
 // tagFuncMaps: declare custom validation tag and function
 var tagFuncMaps = map[string]func(v.FieldLevel) bool{
-	"required_if":       RequiredIf,
-	"s_eq":              SliceEq,
-	"string_gt":         StringGt,
-	"string_lt":         StringLt,
-	"image_name":        isImageName,
-	"hashtag":           isHashtag,
-	"int_array_len":     intArrayLen,
-	"max_array_len":     maxArrayLen,
-	"source_im_name":    sourceIMName,
-	"source_video_name": sourceVideoName,
+	"required_if":   RequiredIf,
+	"s_eq":          SliceEq,
+	"string_gt":     StringGt,
+	"string_lt":     StringLt,
+	"image_name":    isImageName,
+	"hashtag":       isHashtag,
+	"int_array_len": intArrayLen,
+	"max_array_len": maxArrayLen,
+	"video_name":    isVideoName,
 }
 
 var tagNameFunc = []func(reflect.StructField) string{

@@ -10,7 +10,11 @@ type LocationID uint
 // Post struct
 type Post struct {
 	*gorm.Model
-	UserID     uint        `gorm:"column:user_id"`
-	Caption    string      `gorm:"column:caption"`
-	LocationID *LocationID `gorm:"column:location_id"`
+	UserID     uint
+	Caption    string
+	Location   Location
+	LocationID *LocationID
+	Hashtags   []Hashtag `gorm:"many2many:post_hashtags"`
+	Stars      []Star    `gorm:"many2many:post_stars"`
+	StarCount  StarCount `gorm:"polymorphic:Owner"`
 }

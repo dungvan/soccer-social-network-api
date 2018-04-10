@@ -1,6 +1,8 @@
 package post
 
 import (
+	"errors"
+	"net/http"
 	"strings"
 
 	"github.com/dungvan2512/socker-social-network/model"
@@ -14,7 +16,13 @@ type Usecase interface {
 	// Index usecase
 	Index(userID uint) (IndexResponse, error)
 	// Create a post
-	Create(r CreateRequest) (postID uint, err error)
+	Create(CreateRequest) (postID uint, err error)
+	// Update a post
+	Update(UpdateRequest) (uint, error)
+	// CountUpStar increase star
+	CountUpStar(StarCountRequest) (StarCountResponse, error)
+	// CountDownStar  decrease star
+	CountDownStar(StarCountRequest) (StarCountResponse, error)
 }
 
 type usecase struct {
@@ -38,7 +46,7 @@ func (u *usecase) Index(userID uint) (IndexResponse, error) {
 			ID:      post.ID,
 			UserID:  userID,
 			Caption: post.Caption,
-			SourceImageURL: func() []interface{} {
+			ImageURLs: func() []interface{} {
 				output := []interface{}{}
 				// if post.SourceImageFileName != nil && len(post.SourceImageFileName) > 0 {
 				// 	for _, imageName := range post.SourceImageFileName {
@@ -48,7 +56,7 @@ func (u *usecase) Index(userID uint) (IndexResponse, error) {
 				// }
 				return output
 			}(),
-			SourceVideoURL: func() []interface{} {
+			VideoURLs: func() []interface{} {
 				output := []interface{}{}
 				// for _, videoName := range post.SourceImageFileName {
 				// 	videourl := utils.GetStorageURL(infrastructure.Storage, infrastructure.Endpoint, infrastructure.Secure, bucketName, utils.GetObjectPath(infrastructure.Storage, S3ImagePath, videoName), infrastructure.Region)
@@ -73,14 +81,15 @@ func (u *usecase) Create(r CreateRequest) (uint, error) {
 			tx.Commit()
 		}
 	}()
-	post := model.Post{UserID: r.User.ID, Caption: r.Caption}
+	post := model.Post{UserID: r.User.ID, Caption: r.Caption, StarCount: model.StarCount{}}
+
 	if r.PlaceID != "" {
 
 	}
-	if r.SourceImageFileName != nil {
+	if r.Images != nil {
 
 	}
-	if r.SourceVideoFileName != nil {
+	if r.Videos != nil {
 
 	}
 	postResponse, err := u.repository.CreatePost(post, tx)
@@ -112,6 +121,107 @@ func (u *usecase) Create(r CreateRequest) (uint, error) {
 	}
 
 	return postResponse.ID, nil
+}
+
+func (u *usecase) Update(r UpdateRequest) (uint, error) {
+	return 0, nil
+}
+
+func (u *usecase) CountUpStar(request StarCountRequest) (StarCountResponse, error) {
+	response := StarCountResponse{}
+	if _, err := u.repository.FindPostByID(request.PostID); err == gorm.ErrRecordNotFound {
+		response.TypeOfStatusCode = http.StatusNotFound
+		return response, errors.New("The post does not exist")
+	} else if err != nil {
+		return response, utils.ErrorsWrap(err, "repository.FinPostByID error")
+	}
+
+	tx := u.db.Begin()
+	postStar, err := u.repository.FindPostStar(request.UserID, request.PostID)
+	switch {
+	case err == nil && postStar.DeletedAt == nil:
+		response.TypeOfStatusCode = http.StatusBadRequest
+		tx.Rollback()
+		return response, errors.New("Can't tap star many time")
+	case err == gorm.ErrRecordNotFound:
+		_, err = u.repository.CreatePostStar(request.UserID, request.PostID, tx)
+		if err != nil {
+			tx.Rollback()
+			return response, utils.ErrorsWrap(err, "repository.CreatePostStar() error")
+		}
+		break
+	case postStar.DeletedAt != nil:
+		_, err = u.repository.RestorePostStar(request.UserID, request.PostID, tx)
+		if err != nil {
+			tx.Rollback()
+			return response, utils.ErrorsWrap(err, "repository.RestorePostStar() error")
+		}
+		break
+	default:
+		return response, utils.ErrorsWrap(err, "repository.FindPostStar() error")
+	}
+
+	_, err = u.repository.FindPostStarCount(request.PostID)
+	// if err == gorm.ErrRecordNotFound {
+	// 	_, err = u.repository.CreatePostStarCount(request.PostID, tx)
+	// 	if err != nil {
+	// 		tx.Rollback()
+	// 		return response, utils.ErrorsWrap(err, "repository.CreatepostStarCount() error")
+	// 	}
+	// }
+	if err != nil {
+		tx.Rollback()
+		return response, utils.ErrorsWrap(err, "repository.FindPostStarCount() error")
+	}
+	starCount, err := u.repository.UpdatePostStarCount(upUnit, request.PostID, tx)
+	if err != nil {
+		tx.Rollback()
+		return response, utils.ErrorsWrap(err, "repository.UpdatePostStarCount() error")
+	}
+	response.StarCount = starCount
+	tx.Commit()
+	return response, err
+}
+
+func (u *usecase) CountDownStar(request StarCountRequest) (StarCountResponse, error) {
+	response := StarCountResponse{}
+	if _, err := u.repository.FindPostByID(request.PostID); err == gorm.ErrRecordNotFound {
+		response.TypeOfStatusCode = http.StatusNotFound
+		return response, errors.New("The outfit does not exist")
+	} else if err != nil {
+		return response, utils.ErrorsWrap(err, "repository.FindPostByID error")
+	}
+	postStarCount, err := u.repository.FindPostStarCount(request.PostID)
+	if err == gorm.ErrRecordNotFound || (err == nil && postStarCount.Quantity == defaultStarCount) {
+		response.TypeOfStatusCode = http.StatusBadRequest
+		return response, errors.New("The outfit has no stars")
+	} else if err != nil {
+		return response, utils.ErrorsWrap(err, "repository.FindPostStarCount error")
+	}
+
+	postStar, err := u.repository.FindPostStar(request.UserID, request.PostID)
+	if err == gorm.ErrRecordNotFound || postStar.DeletedAt != nil {
+		response.TypeOfStatusCode = http.StatusBadRequest
+		return response, errors.New("User has not tapped or untapped the star before")
+	} else if err != nil {
+		return response, utils.ErrorsWrap(err, "repository.FindPostStar error")
+	}
+
+	tx := u.db.Begin()
+	starCount, err := u.repository.UpdatePostStarCount(downUnit, request.PostID, tx)
+	if err != nil {
+		tx.Rollback()
+		return response, utils.ErrorsWrap(err, "repository.UpdatePostStarCount error")
+	}
+	_, err = u.repository.DeletePostStar(request.UserID, request.PostID, tx)
+	if err != nil {
+		tx.Rollback()
+		return response, utils.ErrorsWrap(err, "repository.DeletePostStar error")
+	}
+
+	tx.Commit()
+	response.StarCount = starCount
+	return response, err
 }
 
 // NewUsecase creare new instance of Usecase

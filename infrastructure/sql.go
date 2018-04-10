@@ -33,9 +33,6 @@ func NewSQL() *SQL {
 	connect := "host=" + v.host + " user=" + v.user + " dbname=" + v.name + " sslmode=disable password=" + v.pass
 	db, err := gorm.Open(v.dbms, connect)
 	db.LogMode(v.logmode)
-	// Disable table name's pluralization globally
-	// if set this to true, `User`'s default table name will be `user`, table name setted with `TableName` won't be affected
-	db.SingularTable(true)
 	if err != nil {
 		panic(err)
 	}

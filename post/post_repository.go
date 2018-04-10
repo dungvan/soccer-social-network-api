@@ -22,6 +22,22 @@ type Repository interface {
 	GetHashTagsIDByKeyWords(hashtags []string, transaction *gorm.DB) ([]uint, error)
 	// CreatePostHashtags create outfit hashtags
 	CreatePostHashtags(postID uint, hashtagsID []uint, transaction *gorm.DB) error
+	// FindPostStarHistory find PostStar contain record has deleted_at != null.
+	FindPostStar(userID, postID uint) (*model.PostStar, error)
+	// FindPostByID find a post by id
+	FindPostByID(postID uint) (*model.Post, error)
+	// CreatePostStar create new PostStar
+	CreatePostStar(userID, postID uint, transasction *gorm.DB) (rowsAffected int64, err error)
+	// RestorePostStar update deleted_at field = nill
+	RestorePostStar(userID uint, postID uint, transaction *gorm.DB) (rowsAffected int64, err error)
+	// FindPostStarCount find StarCount.
+	FindPostStarCount(postID uint) (*model.StarCount, error)
+	// CreatePostStarCount create StarCount
+	// CreatePostStarCount(postID uint, transaction *gorm.DB) (rowsAffected int64, err error)
+	// UpdatePostStarCount update StarCount field in the star_counts table
+	UpdatePostStarCount(unit int, postID uint, transaction *gorm.DB) (starCount uint, err error)
+	// soft delete PostStar
+	DeletePostStar(userID uint, postID uint, transaction *gorm.DB) (rowsAffected int64, err error)
 }
 
 type repository struct {
@@ -49,7 +65,7 @@ func (r *repository) CreateHashtags(hashtags []string, tx *gorm.DB) error {
 	if len(hashtags) == 0 {
 		return nil
 	}
-	sql := "INSERT INTO hashtag (key) VALUES "
+	sql := "INSERT INTO hashtags (key_word) VALUES "
 	vals := []interface{}{}
 	params := []string{}
 	for _, hashtag := range hashtags {
@@ -57,18 +73,18 @@ func (r *repository) CreateHashtags(hashtags []string, tx *gorm.DB) error {
 		vals = append(vals, hashtag)
 	}
 	sql += strings.Join(params, ",")
-	sql += " ON CONFLICT (key) DO NOTHING"
+	sql += " ON CONFLICT (key_word) DO NOTHING"
 	err := tx.Exec(sql, vals...).Error
 	return utils.ErrorsWrap(err, "can't insert hashtag")
 }
 
 func (r *repository) GetHashTagsIDByKeyWords(hashtags []string, tx *gorm.DB) ([]uint, error) {
-	sqlSelect := "SELECT id FROM hashtag WHERE key IN (?)"
-	var hashtagsID []uint
+	sqlSelect := "SELECT id FROM hashtags WHERE key_word IN (?)"
+	var hashtagIDs []uint
 	var hashtagID uint
 	rows, err := tx.Raw(sqlSelect, hashtags).Rows()
 	if err != nil {
-		return hashtagsID, utils.ErrorsWrap(err, "can't get hashtag")
+		return hashtagIDs, utils.ErrorsWrap(err, "can't get hashtags")
 	}
 	defer func() {
 		_ = rows.Close()
@@ -76,11 +92,11 @@ func (r *repository) GetHashTagsIDByKeyWords(hashtags []string, tx *gorm.DB) ([]
 	for rows.Next() {
 		err = rows.Scan(&hashtagID)
 		if err != nil {
-			return nil, utils.ErrorsWrap(err, "can't get hashtag")
+			return nil, utils.ErrorsWrap(err, "can't get hashtags")
 		}
-		hashtagsID = append(hashtagsID, hashtagID)
+		hashtagIDs = append(hashtagIDs, hashtagID)
 	}
-	return hashtagsID, nil
+	return hashtagIDs, nil
 }
 
 func (r *repository) CreatePostHashtags(oufitID uint, hashtagsID []uint, tx *gorm.DB) error {
@@ -97,6 +113,74 @@ func (r *repository) CreatePostHashtags(oufitID uint, hashtagsID []uint, tx *gor
 	sqlStr += strings.Join(params, ",")
 	err := tx.Exec(sqlStr, vals...).Error
 	return utils.ErrorsWrap(err, "can't create data.")
+}
+
+func (r *repository) FindPostStar(userID, postID uint) (*model.PostStar, error) {
+	postStar := &model.PostStar{}
+	err := r.db.Unscoped().Where("id = ? AND user_id = ?", postID, userID).First(postStar).Error
+	if err == gorm.ErrRecordNotFound {
+		return postStar, err
+	}
+	return postStar, utils.ErrorsWrap(err, "can't find")
+}
+
+func (r *repository) FindPostByID(postID uint) (*model.Post, error) {
+	post := &model.Post{}
+	err := r.db.Where("id = ?", postID).First(post).Error
+	if err == gorm.ErrRecordNotFound {
+		return post, err
+	}
+	return post, utils.ErrorsWrap(err, "can't find")
+}
+
+func (r *repository) CreatePostStar(userID, postID uint, tx *gorm.DB) (int64, error) {
+	postStar := &model.PostStar{PostID: postID, UserID: userID}
+	result := tx.Create(postStar)
+	return result.RowsAffected, utils.ErrorsWrap(result.Error, "can't create")
+}
+
+func (r *repository) RestorePostStar(userID uint, postID uint, tx *gorm.DB) (int64, error) {
+	postStar, err := r.FindPostStar(userID, postID)
+	if err != nil {
+		return 0, utils.ErrorsWrap(err, "can't find")
+	}
+	postStar.DeletedAt = nil
+	result := tx.Unscoped().Save(postStar)
+	return result.RowsAffected, utils.ErrorsWrap(result.Error, "can't restore")
+}
+
+func (r *repository) FindPostStarCount(postID uint) (*model.StarCount, error) {
+	starCount := &model.StarCount{}
+	err := r.db.Model(&model.Post{}).Where("id = ?", postID).Related(starCount).Error
+	if err == gorm.ErrRecordNotFound {
+		return starCount, err
+	}
+	return starCount, utils.ErrorsWrap(err, "can't find")
+}
+
+// func (r *repository) CreatePostStarCount(postID uint, tx *gorm.DB) (int64, error) {
+// 	starCount := &model.StarCount{
+// 		PostID:   postID,
+// 		Quantity: defaultStarCount,
+// 	}
+// 	result := tx.Save(starCount)
+// 	return result.RowsAffected, utils.ErrorsWrap(result.Error, "can't create")
+// }
+
+func (r *repository) UpdatePostStarCount(unit int, postID uint, tx *gorm.DB) (uint, error) {
+	starCount := &model.StarCount{}
+	err := tx.Where("post_id = ?", postID).First(starCount).Error
+	if err != nil {
+		return 0, utils.ErrorsWrap(err, "can't find")
+	}
+	starCount.Quantity += uint(unit)
+	err = tx.Save(starCount).Error
+	return starCount.Quantity, utils.ErrorsWrap(err, "can't update")
+}
+
+func (r *repository) DeletePostStar(userID uint, postID uint, tx *gorm.DB) (int64, error) {
+	result := tx.Where("user_id = ? AND post_id =?", userID, postID).Delete(&model.PostStar{})
+	return result.RowsAffected, utils.ErrorsWrap(result.Error, "can't delete")
 }
 
 // NewRepository create new instance of Repository
