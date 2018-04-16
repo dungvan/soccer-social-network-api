@@ -2,6 +2,7 @@ CREATE DATABASE ssn owner postgres encoding 'utf8';
 \c ssn;
 
 /* Drop Tables */
+DROP TABLE IF EXISTS "star_counts";
 DROP TABLE IF EXISTS "post_hashtags";
 DROP TABLE IF EXISTS "posts_stars";
 DROP TABLE IF EXISTS "hashtags";
@@ -127,12 +128,13 @@ ALTER SEQUENCE videos_id_SEQ INCREMENT 1 RESTART 1;
 CREATE TABLE post_stars
 (
 	id serial NOT NULL UNIQUE,
-	user_id int NOT NULL UNIQUE,
-	post_id int NOT NULL UNIQUE,
+	user_id int NOT NULL,
+	post_id int NOT NULL,
 	created_at timestamp,
 	updated_at timestamp,
 	deleted_at timestamp,
-	PRIMARY KEY (id)
+	PRIMARY KEY (id),
+	CONSTRAINT post_stars_post_id_user_id_UNIQUE UNIQUE (post_id, user_id)
 ) WITHOUT OIDS;
 
 ALTER SEQUENCE post_stars_id_SEQ INCREMENT 1 RESTART 1;
@@ -141,7 +143,7 @@ CREATE TABLE star_counts
 (
 	id serial NOT NULL UNIQUE,
 	owner_id int,
-	owner_type varchar,
+	owner_type text,
 	quantity int DEFAULT 0,
 	created_at timestamp,
 	updated_at timestamp,

@@ -31,9 +31,7 @@ type Repository interface {
 	// RestorePostStar update deleted_at field = nill
 	RestorePostStar(userID uint, postID uint, transaction *gorm.DB) (rowsAffected int64, err error)
 	// FindPostStarCount find StarCount.
-	FindPostStarCount(postID uint) (*model.StarCount, error)
-	// CreatePostStarCount create StarCount
-	// CreatePostStarCount(postID uint, transaction *gorm.DB) (rowsAffected int64, err error)
+	FindPostStarCount(post model.Post) (*model.StarCount, error)
 	// UpdatePostStarCount update StarCount field in the star_counts table
 	UpdatePostStarCount(unit int, postID uint, transaction *gorm.DB) (starCount uint, err error)
 	// soft delete PostStar
@@ -117,7 +115,7 @@ func (r *repository) CreatePostHashtags(oufitID uint, hashtagsID []uint, tx *gor
 
 func (r *repository) FindPostStar(userID, postID uint) (*model.PostStar, error) {
 	postStar := &model.PostStar{}
-	err := r.db.Unscoped().Where("id = ? AND user_id = ?", postID, userID).First(postStar).Error
+	err := r.db.Unscoped().Where("post_id = ? AND user_id = ?", postID, userID).First(postStar).Error
 	if err == gorm.ErrRecordNotFound {
 		return postStar, err
 	}
@@ -149,27 +147,18 @@ func (r *repository) RestorePostStar(userID uint, postID uint, tx *gorm.DB) (int
 	return result.RowsAffected, utils.ErrorsWrap(result.Error, "can't restore")
 }
 
-func (r *repository) FindPostStarCount(postID uint) (*model.StarCount, error) {
+func (r *repository) FindPostStarCount(post model.Post) (*model.StarCount, error) {
 	starCount := &model.StarCount{}
-	err := r.db.Model(&model.Post{}).Where("id = ?", postID).Related(starCount).Error
+	err := r.db.Model(&post).Related(starCount, "StarCount").Error
 	if err == gorm.ErrRecordNotFound {
 		return starCount, err
 	}
 	return starCount, utils.ErrorsWrap(err, "can't find")
 }
 
-// func (r *repository) CreatePostStarCount(postID uint, tx *gorm.DB) (int64, error) {
-// 	starCount := &model.StarCount{
-// 		PostID:   postID,
-// 		Quantity: defaultStarCount,
-// 	}
-// 	result := tx.Save(starCount)
-// 	return result.RowsAffected, utils.ErrorsWrap(result.Error, "can't create")
-// }
-
 func (r *repository) UpdatePostStarCount(unit int, postID uint, tx *gorm.DB) (uint, error) {
 	starCount := &model.StarCount{}
-	err := tx.Where("post_id = ?", postID).First(starCount).Error
+	err := tx.Where("owner_id = ? and owner_type = ?", postID, "posts").First(starCount).Error
 	if err != nil {
 		return 0, utils.ErrorsWrap(err, "can't find")
 	}

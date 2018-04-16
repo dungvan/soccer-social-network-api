@@ -17,11 +17,10 @@ services:
         command: server /export
         container_name: storage-cont
     db:
-        image: postgres:9.6.5-alpine
+        image: postgres:latest
         ports:
             - "5432:5432" # host:container
         volumes:
-        - data-vol:/var/lib/postgresql/data
         - ./migration/all:/docker-entrypoint-initdb.d
         environment:
             - POSTGRES_USER=postgres
@@ -30,13 +29,13 @@ services:
             - POSTGRES_PORT=5432
         container_name: db-cont
     redis:
-        image: redis:3.2.10-alpine
+        image: redis:latest
         ports: 
             - "6379"
         container_name: kvs-cont
 
     proxy:
-        image: nginx:1.13.8-alpine
+        image: nginx:latest
         ports:
             - "80:80" # host:container
             - "443:443"

@@ -81,7 +81,7 @@ func (u *usecase) Create(r CreateRequest) (uint, error) {
 			tx.Commit()
 		}
 	}()
-	post := model.Post{UserID: r.User.ID, Caption: r.Caption, StarCount: model.StarCount{}}
+	post := model.Post{UserID: r.User.ID, Caption: r.Caption, StarCount: &model.StarCount{Quantity: 0}}
 
 	if r.PlaceID != "" {
 
@@ -128,8 +128,10 @@ func (u *usecase) Update(r UpdateRequest) (uint, error) {
 }
 
 func (u *usecase) CountUpStar(request StarCountRequest) (StarCountResponse, error) {
+	var post *model.Post
 	response := StarCountResponse{}
-	if _, err := u.repository.FindPostByID(request.PostID); err == gorm.ErrRecordNotFound {
+	post, err := u.repository.FindPostByID(request.PostID)
+	if err == gorm.ErrRecordNotFound {
 		response.TypeOfStatusCode = http.StatusNotFound
 		return response, errors.New("The post does not exist")
 	} else if err != nil {
@@ -161,14 +163,7 @@ func (u *usecase) CountUpStar(request StarCountRequest) (StarCountResponse, erro
 		return response, utils.ErrorsWrap(err, "repository.FindPostStar() error")
 	}
 
-	_, err = u.repository.FindPostStarCount(request.PostID)
-	// if err == gorm.ErrRecordNotFound {
-	// 	_, err = u.repository.CreatePostStarCount(request.PostID, tx)
-	// 	if err != nil {
-	// 		tx.Rollback()
-	// 		return response, utils.ErrorsWrap(err, "repository.CreatepostStarCount() error")
-	// 	}
-	// }
+	_, err = u.repository.FindPostStarCount(*post)
 	if err != nil {
 		tx.Rollback()
 		return response, utils.ErrorsWrap(err, "repository.FindPostStarCount() error")
@@ -184,14 +179,16 @@ func (u *usecase) CountUpStar(request StarCountRequest) (StarCountResponse, erro
 }
 
 func (u *usecase) CountDownStar(request StarCountRequest) (StarCountResponse, error) {
+	var post *model.Post
 	response := StarCountResponse{}
-	if _, err := u.repository.FindPostByID(request.PostID); err == gorm.ErrRecordNotFound {
+	post, err := u.repository.FindPostByID(request.PostID)
+	if err == gorm.ErrRecordNotFound {
 		response.TypeOfStatusCode = http.StatusNotFound
 		return response, errors.New("The outfit does not exist")
 	} else if err != nil {
 		return response, utils.ErrorsWrap(err, "repository.FindPostByID error")
 	}
-	postStarCount, err := u.repository.FindPostStarCount(request.PostID)
+	postStarCount, err := u.repository.FindPostStarCount(*post)
 	if err == gorm.ErrRecordNotFound || (err == nil && postStarCount.Quantity == defaultStarCount) {
 		response.TypeOfStatusCode = http.StatusBadRequest
 		return response, errors.New("The outfit has no stars")

@@ -1,11 +1,8 @@
 #this is only for development
-FROM golang:1.9.2-alpine
+FROM golang:latest
 
 ENV ENV_API local
 ENV SSN_API_DIR /go/src/github.com/dungvan2512/socker-social-network
-
-#install git
-RUN apk add --no-cache git mercurial
 
 # install dependency tool
 RUN go get -u github.com/golang/dep/cmd/dep
