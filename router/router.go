@@ -71,6 +71,7 @@ func (r *Router) SetupHandler() {
 		cr.Post("/", ph.Create)
 		cr.Post("/images", ph.UploadImages)
 		cr.Route("/{post_id:0*([1-9])([0-9]?)+}", func(cr chi.Router) {
+			cr.Get("/", ph.Show)
 			cr.Post("/star", ph.UpStar)
 			cr.Delete("/star", ph.DeleteStar)
 		})

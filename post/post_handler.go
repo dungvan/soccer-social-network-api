@@ -66,6 +66,31 @@ func (h *HTTPHandler) Create(w http.ResponseWriter, r *http.Request) {
 	h.ResponseJSON(w, CreateResponse{postID})
 }
 
+// Show a post Handler
+func (h *HTTPHandler) Show(w http.ResponseWriter, r *http.Request) {
+	postID, err := strconv.Atoi(chi.URLParam(r, "post_id"))
+	response, err := h.usecase.Show(uint(postID))
+	if err != nil {
+		h.Logger.WithFields(logrus.Fields{
+			"error": err,
+		}).Error("usecase.CountUpStar() error")
+		if response.TypeOfStatusCode == http.StatusBadRequest {
+			common := utils.CommonResponse{Message: "Bad request error response", Errors: []string{err.Error()}}
+			h.StatusBadRequest(w, common)
+			return
+		}
+		if response.TypeOfStatusCode == http.StatusNotFound {
+			h.StatusNotFoundRequest(w, nil)
+			return
+		}
+		common := utils.CommonResponse{Message: "Internal server error response", Errors: []string{}}
+		h.StatusServerError(w, common)
+		return
+	}
+
+	h.ResponseJSON(w, response)
+}
+
 // UpStar increase the number of "star" about outfit.
 //
 // "First": to register to OutfitStarCount Outfit ID.

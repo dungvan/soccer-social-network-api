@@ -18,6 +18,8 @@ type Usecase interface {
 	Index(userID uint) (IndexResponse, error)
 	// Create a post
 	Create(CreateRequest) (postID uint, err error)
+	// Show a post
+	Show(postID uint) (RespPost, error)
 	// Update a post
 	Update(UpdateRequest) (uint, error)
 	// CountUpStar increase star
@@ -133,6 +135,49 @@ func (u *usecase) Create(r CreateRequest) (uint, error) {
 	return postResponse.ID, nil
 }
 
+func (u *usecase) Show(postID uint) (RespPost, error) {
+	response := RespPost{}
+	post, err := u.repository.FindPostByID(postID)
+	if err == gorm.ErrRecordNotFound {
+		response.TypeOfStatusCode = http.StatusNotFound
+		return response, utils.ErrorsNew("the post dose not exist")
+	} else if err != nil {
+		return response, utils.ErrorsWrap(err, "repository.FindPostByID error")
+	}
+	err = u.repository.GetRelatedPostImages(post)
+	if err != nil {
+		utils.ErrorsWrap(err, "repository.GetRelatedPostImages() error")
+	}
+
+	bucketName := infrastructure.GetConfigString("objectstorage.bucketname")
+	response.ID = post.ID
+	response.Caption = post.Caption
+	response.UserID = post.UserID
+	response.CreatedAt = post.CreatedAt
+	response.ImageURLs = func() []interface{} {
+		output := []interface{}{}
+		if post.Images != nil && len(post.Images) > 0 {
+			for _, image := range post.Images {
+				imageurl := utils.GetStorageURL(infrastructure.Storage, infrastructure.Endpoint, infrastructure.Secure, bucketName, utils.GetObjectPath(infrastructure.Storage, s3ImagePath, image.Name), infrastructure.Region)
+				output = append(output, imageurl)
+			}
+		}
+		return output
+	}()
+	response.VideoURLs = func() []interface{} {
+		output := []interface{}{}
+		// if post.Images != nil && len(post.Images) > 0 {
+		// 	for _, image := range post.Images {
+		// 		imageurl := utils.GetStorageURL(infrastructure.Storage, infrastructure.Endpoint, infrastructure.Secure, bucketName, utils.GetObjectPath(infrastructure.Storage, s3ImagePath, image.Name), infrastructure.Region)
+		// 		output = append(output, imageurl)
+		// 	}
+		// }
+		return output
+	}()
+
+	return response, nil
+}
+
 func (u *usecase) Update(r UpdateRequest) (uint, error) {
 	return 0, nil
 }
@@ -143,7 +188,7 @@ func (u *usecase) CountUpStar(request StarCountRequest) (StarCountResponse, erro
 	post, err := u.repository.FindPostByID(request.PostID)
 	if err == gorm.ErrRecordNotFound {
 		response.TypeOfStatusCode = http.StatusNotFound
-		return response, errors.New("The post does not exist")
+		return response, errors.New("the post does not exist")
 	} else if err != nil {
 		return response, utils.ErrorsWrap(err, "repository.FinPostByID error")
 	}
