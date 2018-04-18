@@ -65,10 +65,10 @@ func (h *HTTPHandler) Parse(r *http.Request, i interface{}) error {
 // https://github.com/go-playground/form
 func (h *HTTPHandler) ParseMultipart(r *http.Request, i interface{}) error {
 	if r == nil {
-		return utils.ErrorsNew("first argument is nil")
+		return utils.ErrorsNew("parse request is required")
 	}
 	if i == nil {
-		return utils.ErrorsNew("second argument is nil")
+		return utils.ErrorsNew("can't not part request to type nil")
 	}
 	maxMemory := infrastructure.GetConfigInt64("multipart.maxmemory")
 	err := r.ParseMultipartForm(maxMemory)

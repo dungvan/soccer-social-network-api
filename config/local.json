@@ -27,9 +27,9 @@
     },
     "objectstorage": {
         "storage": "minio",
-        "endpoint": "50164d3d.ngrok.io",
+        "endpoint": "s3:9000",
         "region": "ap-northeast-1",
-        "bucketname": "item",
+        "bucketname": "socker-social-network",
         "accesskey": "DUNGVANEXAMPLE",
         "secretkey": "DUNGVANEXAMPLE",
         "secure": false

@@ -2,11 +2,11 @@ package post
 
 const (
 	// S3Path is folder contains post file
-	S3Path = "post"
+	s3Path = "post"
 	// S3VideoPath is folder contains video file
-	S3VideoPath = S3Path + "/video"
+	s3VideoPath = s3Path + "/video"
 	// S3ImagePath is folder contains image file
-	S3ImagePath = S3Path + "/image"
+	s3ImagePath = s3Path + "/image"
 	// Default star count
 	defaultStarCount = 0
 	// Default up a star count

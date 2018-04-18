@@ -53,7 +53,7 @@ func (r *Router) SetupHandler() {
 	// user set
 	uh := user.NewHTTPHandler(bh, bu, br, r.SQLHandler, r.CacheHandler)
 	// post set
-	ph := post.NewHTTPHandler(bh, bu, br, r.SQLHandler, r.CacheHandler)
+	ph := post.NewHTTPHandler(bh, bu, br, r.SQLHandler, r.CacheHandler, r.S3Handler)
 	// authentication middleware.
 	// authMiddleware := mMiddleware.JwtAuth(r.LoggerHandler, r.SQLHandler.DB)
 	r.Mux.Route("/", func(cr chi.Router) {
@@ -69,6 +69,7 @@ func (r *Router) SetupHandler() {
 		cr.Use(mMiddleware.JwtAuth(r.LoggerHandler, r.SQLHandler.DB))
 		cr.Get("/", ph.Index)
 		cr.Post("/", ph.Create)
+		cr.Post("/images", ph.UploadImages)
 		cr.Route("/{post_id:0*([1-9])([0-9]?)+}", func(cr chi.Router) {
 			cr.Post("/star", ph.UpStar)
 			cr.Delete("/star", ph.DeleteStar)

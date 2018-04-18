@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/dungvan2512/socker-social-network/infrastructure"
 	"github.com/dungvan2512/socker-social-network/model"
 	"github.com/dungvan2512/socker-social-network/shared/base"
 	"github.com/dungvan2512/socker-social-network/shared/utils"
@@ -23,6 +24,8 @@ type Usecase interface {
 	CountUpStar(StarCountRequest) (StarCountResponse, error)
 	// CountDownStar  decrease star
 	CountDownStar(StarCountRequest) (StarCountResponse, error)
+	// Add images to s3
+	UploadImages(request UploadImagesRequest) (UploadImagesResponse, error)
 }
 
 type usecase struct {
@@ -40,20 +43,24 @@ func (u *usecase) Index(userID uint) (IndexResponse, error) {
 	indexResp.ResultCount = len(result)
 	indexResp.Posts = []RespPost{}
 
-	// bucketName := infrastructure.GetConfigString("objectstorage.bucketname")
+	bucketName := infrastructure.GetConfigString("objectstorage.bucketname")
 	for _, post := range result {
+		err = u.repository.GetRelatedPostImages(&post)
+		if err != nil {
+			utils.ErrorsWrap(err, "repository.GetRelatedPostImages() error")
+		}
 		data := RespPost{
 			ID:      post.ID,
 			UserID:  userID,
 			Caption: post.Caption,
 			ImageURLs: func() []interface{} {
 				output := []interface{}{}
-				// if post.SourceImageFileName != nil && len(post.SourceImageFileName) > 0 {
-				// 	for _, imageName := range post.SourceImageFileName {
-				// 		imageurl := utils.GetStorageURL(infrastructure.Storage, infrastructure.Endpoint, infrastructure.Secure, bucketName, utils.GetObjectPath(infrastructure.Storage, S3ImagePath, imageName), infrastructure.Region)
-				// 		output = append(output, imageurl)
-				// 	}
-				// }
+				if post.Images != nil && len(post.Images) > 0 {
+					for _, image := range post.Images {
+						imageurl := utils.GetStorageURL(infrastructure.Storage, infrastructure.Endpoint, infrastructure.Secure, bucketName, utils.GetObjectPath(infrastructure.Storage, s3ImagePath, image.Name), infrastructure.Region)
+						output = append(output, imageurl)
+					}
+				}
 				return output
 			}(),
 			VideoURLs: func() []interface{} {
@@ -87,7 +94,10 @@ func (u *usecase) Create(r CreateRequest) (uint, error) {
 
 	}
 	if r.Images != nil {
-
+		post.Images = []model.Image{}
+		for _, imageName := range r.Images {
+			post.Images = append(post.Images, model.Image{Name: imageName})
+		}
 	}
 	if r.Videos != nil {
 
@@ -219,6 +229,19 @@ func (u *usecase) CountDownStar(request StarCountRequest) (StarCountResponse, er
 	tx.Commit()
 	response.StarCount = starCount
 	return response, err
+}
+
+func (u *usecase) UploadImages(request UploadImagesRequest) (UploadImagesResponse, error) {
+	response := UploadImagesResponse{[]string{}}
+	for index, image := range request.Images {
+		err := u.repository.AddImageToS3(image, s3ImagePath)
+		if err != nil {
+			utils.ErrorsWrap(err, "can't upload file "+string(index)+" to S3")
+			continue
+		}
+		response.ImageNames = append(response.ImageNames, image.Name)
+	}
+	return response, nil
 }
 
 // NewUsecase creare new instance of Usecase

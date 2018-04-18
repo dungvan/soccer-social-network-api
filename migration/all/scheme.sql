@@ -102,7 +102,7 @@ ALTER SEQUENCE post_hashtags_id_SEQ INCREMENT 1 RESTART 1;
 CREATE TABLE images
 (
 	id serial NOT NULL UNIQUE,
-	image_id int NOT NULL,
+	post_id int NOT NULL,
 	name varchar(272),
 	created_at timestamp,
 	updated_at timestamp,

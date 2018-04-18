@@ -1,6 +1,8 @@
 package post
 
-import "time"
+import (
+	"time"
+)
 
 // CreateResponse struct
 type CreateResponse struct {
@@ -28,4 +30,9 @@ type RespPost struct {
 type StarCountResponse struct {
 	TypeOfStatusCode int  `json:"-"`
 	StarCount        uint `json:"star_count"`
+}
+
+// UploadImagesResponse struct
+type UploadImagesResponse struct {
+	ImageNames []string `json:"image_names"`
 }

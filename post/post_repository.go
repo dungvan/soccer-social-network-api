@@ -1,8 +1,11 @@
 package post
 
 import (
+	"errors"
 	"strings"
 
+	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/dungvan2512/socker-social-network/infrastructure"
 	"github.com/dungvan2512/socker-social-network/model"
 	"github.com/dungvan2512/socker-social-network/shared/base"
 	"github.com/dungvan2512/socker-social-network/shared/utils"
@@ -36,12 +39,17 @@ type Repository interface {
 	UpdatePostStarCount(unit int, postID uint, transaction *gorm.DB) (starCount uint, err error)
 	// soft delete PostStar
 	DeletePostStar(userID uint, postID uint, transaction *gorm.DB) (rowsAffected int64, err error)
+	// AddImageToS3 upload image to server S3
+	AddImageToS3(image Image, s3Path string) error
+	// GetRelatedPostImages get images of a post
+	GetRelatedPostImages(post *model.Post) error
 }
 
 type repository struct {
 	base.Repository
 	db    *gorm.DB
 	redis *redis.Conn
+	s3    infrastructure.NewS3RequestFunc
 }
 
 func (r *repository) GetAllPostsByUserID(userID uint) ([]model.Post, error) {
@@ -172,7 +180,27 @@ func (r *repository) DeletePostStar(userID uint, postID uint, tx *gorm.DB) (int6
 	return result.RowsAffected, utils.ErrorsWrap(result.Error, "can't delete")
 }
 
+func (r *repository) AddImageToS3(image Image, s3Path string) error {
+	bucketName := infrastructure.GetConfigString("objectstorage.bucketname")
+	if image.Body == nil {
+		return utils.ErrorsWrap(errors.New("no file detected"), "can't find uploadfile")
+	}
+	objectName := utils.GetObjectPath(infrastructure.Storage, s3Path, image.Name)
+	params, err := r.s3().SetParam(image.Body, bucketName, objectName, image.MimeType, s3.BucketCannedACLPublicReadWrite).UploadToS3()
+	r.Logger.Debug(params.String())
+	if err != nil {
+		return utils.ErrorsWrap(err, "can't put S3")
+	}
+	return nil
+}
+
+func (r *repository) GetRelatedPostImages(post *model.Post) error {
+	post.Images = make([]model.Image, 0)
+	result := r.db.Model(post).Related(&post.Images)
+	return utils.ErrorsWrap(result.Error, "can't get posts-images relation")
+}
+
 // NewRepository create new instance of Repository
-func NewRepository(br *base.Repository, db *gorm.DB, redis *redis.Conn) Repository {
-	return &repository{*br, db, redis}
+func NewRepository(br *base.Repository, db *gorm.DB, redis *redis.Conn, s3RequestFunc infrastructure.NewS3RequestFunc) Repository {
+	return &repository{*br, db, redis, s3RequestFunc}
 }
