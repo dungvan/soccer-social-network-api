@@ -5,9 +5,9 @@ import (
 	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
-	"github.com/dungvan2512/socker-social-network/infrastructure"
-	"github.com/dungvan2512/socker-social-network/model"
-	"github.com/dungvan2512/socker-social-network/shared/utils"
+	"github.com/dungvan2512/soccer-social-network/infrastructure"
+	"github.com/dungvan2512/soccer-social-network/model"
+	"github.com/dungvan2512/soccer-social-network/shared/utils"
 	"github.com/mitchellh/mapstructure"
 )
 

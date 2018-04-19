@@ -3,9 +3,9 @@ package main
 import (
 	"net/http"
 
-	"github.com/dungvan2512/socker-social-network/infrastructure"
-	"github.com/dungvan2512/socker-social-network/router"
-	mMiddleware "github.com/dungvan2512/socker-social-network/shared/middleware"
+	"github.com/dungvan2512/soccer-social-network/infrastructure"
+	"github.com/dungvan2512/soccer-social-network/router"
+	mMiddleware "github.com/dungvan2512/soccer-social-network/shared/middleware"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 )

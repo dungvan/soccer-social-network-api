@@ -1,11 +1,11 @@
-# Socker-Social-Network
+# soccer-Social-Network
 ### setup:
 - Install docker, docker-compose.
 ### run local development:
 - build docker
 ```bash
-$ git clone https://github.com/dungvan2512/socker-social-network
-$ cd socker-social-network
+$ git clone https://github.com/dungvan2512/soccer-social-network
+$ cd soccer-social-network
 $ docker-compose build
 $ docker-compose up
 ```
@@ -15,4 +15,4 @@ $ docker-compose up
 ```bash
 $ ./ngrok http 9000
 ```
-- waiting for ngrok export successfully, copy the `endpoint` which ngrok generate to `socker-social-network/config/local.json`, replace to value of `endpoint` of `objectstorage`
+- waiting for ngrok export successfully, copy the `endpoint` which ngrok generate to `soccer-social-network/config/local.json`, replace to value of `endpoint` of `objectstorage`

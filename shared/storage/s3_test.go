@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/dungvan2512/socker-social-network/shared/utils"
+	"github.com/dungvan2512/soccer-social-network/shared/utils"
 	"github.com/stretchr/testify/assert"
 )
 

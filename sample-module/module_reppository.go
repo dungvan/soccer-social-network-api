@@ -1,7 +1,7 @@
 package module
 
 import (
-	"github.com/dungvan2512/socker-social-network/shared/base"
+	"github.com/dungvan2512/soccer-social-network/shared/base"
 	"github.com/garyburd/redigo/redis"
 	"github.com/jinzhu/gorm"
 )

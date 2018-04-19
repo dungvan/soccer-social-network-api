@@ -5,10 +5,10 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/dungvan2512/socker-social-network/infrastructure"
-	"github.com/dungvan2512/socker-social-network/model"
-	"github.com/dungvan2512/socker-social-network/shared/base"
-	"github.com/dungvan2512/socker-social-network/shared/utils"
+	"github.com/dungvan2512/soccer-social-network/infrastructure"
+	"github.com/dungvan2512/soccer-social-network/model"
+	"github.com/dungvan2512/soccer-social-network/shared/base"
+	"github.com/dungvan2512/soccer-social-network/shared/utils"
 	"github.com/garyburd/redigo/redis"
 	"github.com/jinzhu/gorm"
 )
@@ -86,11 +86,11 @@ func (r *repository) CreateHashtags(hashtags []string, tx *gorm.DB) error {
 
 func (r *repository) GetHashTagsIDByKeyWords(hashtags []string, tx *gorm.DB) ([]uint, error) {
 	sqlSelect := "SELECT id FROM hashtags WHERE key_word IN (?)"
-	var hashtagIDs []uint
+	var hashtagsID []uint
 	var hashtagID uint
 	rows, err := tx.Raw(sqlSelect, hashtags).Rows()
 	if err != nil {
-		return hashtagIDs, utils.ErrorsWrap(err, "can't get hashtags")
+		return hashtagsID, utils.ErrorsWrap(err, "can't get hashtags")
 	}
 	defer func() {
 		_ = rows.Close()
@@ -100,9 +100,9 @@ func (r *repository) GetHashTagsIDByKeyWords(hashtags []string, tx *gorm.DB) ([]
 		if err != nil {
 			return nil, utils.ErrorsWrap(err, "can't get hashtags")
 		}
-		hashtagIDs = append(hashtagIDs, hashtagID)
+		hashtagsID = append(hashtagsID, hashtagID)
 	}
-	return hashtagIDs, nil
+	return hashtagsID, nil
 }
 
 func (r *repository) CreatePostHashtags(oufitID uint, hashtagsID []uint, tx *gorm.DB) error {

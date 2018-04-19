@@ -5,8 +5,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/dungvan2512/socker-social-network/infrastructure"
-	"github.com/dungvan2512/socker-social-network/shared/auth"
+	"github.com/dungvan2512/soccer-social-network/infrastructure"
+	"github.com/dungvan2512/soccer-social-network/shared/auth"
 	"github.com/stretchr/testify/assert"
 )
 

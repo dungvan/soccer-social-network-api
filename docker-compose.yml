@@ -66,7 +66,7 @@ services:
             - redis
         ports:
             - "8080:8080" # host:container
-        working_dir: /go/src/github.com/dungvan2512/socker-social-network
+        working_dir: /go/src/github.com/dungvan2512/soccer-social-network
         volumes:
-            - .:/go/src/github.com/dungvan2512/socker-social-network
+            - .:/go/src/github.com/dungvan2512/soccer-social-network
         container_name: go-cont

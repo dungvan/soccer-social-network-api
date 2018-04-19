@@ -5,10 +5,10 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/dungvan2512/socker-social-network/infrastructure"
-	"github.com/dungvan2512/socker-social-network/model"
-	"github.com/dungvan2512/socker-social-network/shared/base"
-	"github.com/dungvan2512/socker-social-network/shared/utils"
+	"github.com/dungvan2512/soccer-social-network/infrastructure"
+	"github.com/dungvan2512/soccer-social-network/model"
+	"github.com/dungvan2512/soccer-social-network/shared/base"
+	"github.com/dungvan2512/soccer-social-network/shared/utils"
 	"github.com/jinzhu/gorm"
 )
 
@@ -109,7 +109,7 @@ func (u *usecase) Create(r CreateRequest) (uint, error) {
 		isError = true
 		return 0, err
 	}
-	hashtagIDs := []uint{}
+	hashtagsID := []uint{}
 	if r.Hashtags != nil && len(r.Hashtags) != 0 {
 		for key, hashtag := range r.Hashtags {
 			r.Hashtags[key] = strings.ToLower(hashtag)
@@ -119,14 +119,14 @@ func (u *usecase) Create(r CreateRequest) (uint, error) {
 			isError = true
 			return 0, utils.ErrorsWrap(err, "repository.CreateHashtags error")
 		}
-		hashtagIDs, err = u.repository.GetHashTagsIDByKeyWords(r.Hashtags, tx)
+		hashtagsID, err = u.repository.GetHashTagsIDByKeyWords(r.Hashtags, tx)
 		if err != nil {
 			isError = true
 			return 0, utils.ErrorsWrap(err, "repository.GetHashTagsIDByKeyWords error")
 		}
 	}
 
-	err = u.repository.CreatePostHashtags(postResponse.ID, hashtagIDs, tx)
+	err = u.repository.CreatePostHashtags(postResponse.ID, hashtagsID, tx)
 	if err != nil {
 		isError = true
 		return 0, utils.ErrorsWrap(err, "repository.CreatePostHashtags error")

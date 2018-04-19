@@ -1,9 +1,9 @@
 package user
 
 import (
-	"github.com/dungvan2512/socker-social-network/model"
-	"github.com/dungvan2512/socker-social-network/shared/auth"
-	"github.com/dungvan2512/socker-social-network/shared/base"
+	"github.com/dungvan2512/soccer-social-network/model"
+	"github.com/dungvan2512/soccer-social-network/shared/auth"
+	"github.com/dungvan2512/soccer-social-network/shared/base"
 	"github.com/garyburd/redigo/redis"
 	"github.com/jinzhu/gorm"
 )

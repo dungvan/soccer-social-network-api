@@ -2,7 +2,7 @@
 FROM golang:latest
 
 ENV ENV_API local
-ENV SSN_API_DIR /go/src/github.com/dungvan2512/socker-social-network
+ENV SSN_API_DIR /go/src/github.com/dungvan2512/soccer-social-network
 
 # install dependency tool
 RUN go get -u github.com/golang/dep/cmd/dep

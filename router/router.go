@@ -3,12 +3,12 @@ package router
 import (
 	"net/http"
 
-	"github.com/dungvan2512/socker-social-network/infrastructure"
-	"github.com/dungvan2512/socker-social-network/post"
-	module "github.com/dungvan2512/socker-social-network/sample-module"
-	"github.com/dungvan2512/socker-social-network/shared/base"
-	mMiddleware "github.com/dungvan2512/socker-social-network/shared/middleware"
-	"github.com/dungvan2512/socker-social-network/user"
+	"github.com/dungvan2512/soccer-social-network/infrastructure"
+	"github.com/dungvan2512/soccer-social-network/post"
+	module "github.com/dungvan2512/soccer-social-network/sample-module"
+	"github.com/dungvan2512/soccer-social-network/shared/base"
+	mMiddleware "github.com/dungvan2512/soccer-social-network/shared/middleware"
+	"github.com/dungvan2512/soccer-social-network/user"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 )

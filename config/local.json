@@ -6,7 +6,7 @@
         "logger": {
             "_comment": "output can select 'output' value or 'file' value. 'output' value is stdout. you should must set 'file' key when file value output file.",
             "output": "output",
-            "file": "/var/log/socker-social-network/socker-social-network.log",
+            "file": "/var/log/soccer-social-network/soccer-social-network.log",
             "level": "debug",
             "format": "json"
         }
@@ -29,7 +29,7 @@
         "storage": "minio",
         "endpoint": "s3:9000",
         "region": "ap-northeast-1",
-        "bucketname": "socker-social-network",
+        "bucketname": "soccer-social-network",
         "accesskey": "DUNGVANEXAMPLE",
         "secretkey": "DUNGVANEXAMPLE",
         "secure": false
@@ -40,7 +40,7 @@
         "header": "Authorization",
         "claim": {
             "_comment": "unit of exp is seconds.",
-            "issuer": "socker-social-network",
+            "issuer": "soccer-social-network",
             "exp": 604800
         }
     }

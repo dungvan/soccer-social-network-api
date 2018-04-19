@@ -3,7 +3,7 @@ package post
 import (
 	"mime/multipart"
 
-	"github.com/dungvan2512/socker-social-network/model"
+	"github.com/dungvan2512/soccer-social-network/model"
 )
 
 // CreateRequest struct
