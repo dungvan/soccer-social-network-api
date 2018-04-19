@@ -5,10 +5,14 @@ CREATE DATABASE ssn owner postgres encoding 'utf8';
 DROP TABLE IF EXISTS "star_counts";
 DROP TABLE IF EXISTS "post_hashtags";
 DROP TABLE IF EXISTS "posts_stars";
+DROP TABLE IF EXISTS "team_players";
 DROP TABLE IF EXISTS "hashtags";
 DROP TABLE IF EXISTS "images";
 DROP TABLE IF EXISTS "videos";
 DROP TABLE IF EXISTS "posts";
+DROP TABLE IF EXISTS "players";
+DROP TABLE IF EXISTS "masters";
+DROP TABLE IF EXISTS "teams";
 DROP TABLE IF EXISTS "user_follows";
 DROP TABLE IF EXISTS "users";
 DROP TABLE IF EXISTS "locations";
@@ -31,7 +35,7 @@ CREATE TABLE "users"
 
 ALTER SEQUENCE users_id_SEQ INCREMENT 1 RESTART 1;
 
-CREATE TABLE user_follows
+CREATE TABLE "user_follows"
 (
 	id serial NOT NULL UNIQUE,
 	user_id int NOT NULL,
@@ -45,7 +49,7 @@ CREATE TABLE user_follows
 
 ALTER SEQUENCE user_follows_id_SEQ INCREMENT 1 RESTART 1;
 
-CREATE TABLE posts
+CREATE TABLE "posts"
 (
 	id serial NOT NULL UNIQUE,
 	user_id int NOT NULL,
@@ -72,7 +76,7 @@ CREATE TABLE "locations"
 
 ALTER SEQUENCE locations_id_SEQ INCREMENT 1 RESTART 1;
 
-CREATE TABLE hashtags
+CREATE TABLE "hashtags"
 (
 	id serial NOT NULL UNIQUE,
 	"key_word" varchar UNIQUE,
@@ -85,7 +89,7 @@ CREATE TABLE hashtags
 
 ALTER SEQUENCE hashtags_id_SEQ INCREMENT 1 RESTART 1;
 
-CREATE TABLE post_hashtags
+CREATE TABLE "post_hashtags"
 (
 	id serial NOT NULL UNIQUE,
 	post_id int,
@@ -99,7 +103,7 @@ CREATE TABLE post_hashtags
 
 ALTER SEQUENCE post_hashtags_id_SEQ INCREMENT 1 RESTART 1;
 
-CREATE TABLE images
+CREATE TABLE "images"
 (
 	id serial NOT NULL UNIQUE,
 	post_id int NOT NULL,
@@ -112,7 +116,7 @@ CREATE TABLE images
 
 ALTER SEQUENCE images_id_SEQ INCREMENT 1 RESTART 1;
 
-CREATE TABLE videos
+CREATE TABLE "videos"
 (
 	id serial NOT NULL UNIQUE,
 	post_id int NOT NULL,
@@ -125,7 +129,7 @@ CREATE TABLE videos
 
 ALTER SEQUENCE videos_id_SEQ INCREMENT 1 RESTART 1;
 
-CREATE TABLE post_stars
+CREATE TABLE "post_stars"
 (
 	id serial NOT NULL UNIQUE,
 	user_id int NOT NULL,
@@ -139,7 +143,7 @@ CREATE TABLE post_stars
 
 ALTER SEQUENCE post_stars_id_SEQ INCREMENT 1 RESTART 1;
 
-CREATE TABLE star_counts
+CREATE TABLE "star_counts"
 (
 	id serial NOT NULL UNIQUE,
 	owner_id int,
@@ -153,6 +157,47 @@ CREATE TABLE star_counts
 ) WITHOUT OIDS;
 
 ALTER SEQUENCE star_counts_id_SEQ INCREMENT 1 RESTART 1;
+
+CREATE TABLE "teams"
+(
+	id serial NOT NULL UNIQUE,
+	max_members int DEFAULT 16,
+	created_at timestamp,
+	updated_at timestamp,
+	deleted_at timestamp,
+	PRIMARY KEY (id)
+) WITHOUT OIDS;
+
+ALTER SEQUENCE teams_id_SEQ INCREMENT 1 RESTART 1;
+
+CREATE TABLE "team_players"
+(
+	id serial NOT NULL UNIQUE,
+	user_id int NOT NULL,
+	team_id int NOT NULL, 
+	created_at timestamp,
+	updated_at timestamp,
+	deleted_at timestamp,
+	PRIMARY KEY (id),
+	CONSTRAINT team_players_user_id_team_id_UNIQUE UNIQUE (user_id, team_id)
+) WITHOUT OIDS;
+
+ALTER SEQUENCE team_players_id_SEQ INCREMENT 1 RESTART 1;
+
+CREATE TABLE "masters"
+(
+	id serial NOT NULL UNIQUE,
+	owner_id int,
+	owner_type text,
+	user_id int NOT NULL,
+	created_at timestamp,
+	updated_at timestamp,
+	deleted_at timestamp,
+	PRIMARY KEY (id),
+	CONSTRAINT masters_owner_id_owner_type_user_id_UNIQUE UNIQUE (owner_id, owner_type, user_id)
+) WITHOUT OIDS;
+
+ALTER SEQUENCE masters_id_SEQ INCREMENT 1 RESTART 1;
 
 ALTER TABLE user_follows
 	ADD FOREIGN KEY (user_id)
@@ -204,6 +249,27 @@ ALTER TABLE post_stars
 ;
 
 ALTER TABLE post_stars
+	ADD FOREIGN KEY (user_id)
+	REFERENCES "users" (id)
+	ON UPDATE RESTRICT
+	ON DELETE RESTRICT
+;
+
+ALTER TABLE team_players
+	ADD FOREIGN KEY (user_id)
+	REFERENCES "users" (id)
+	ON UPDATE RESTRICT
+	ON DELETE RESTRICT
+;
+
+ALTER TABLE team_players
+	ADD FOREIGN KEY (team_id)
+	REFERENCES "teams" (id)
+	ON UPDATE RESTRICT
+	ON DELETE RESTRICT
+;
+
+ALTER TABLE masters
 	ADD FOREIGN KEY (user_id)
 	REFERENCES "users" (id)
 	ON UPDATE RESTRICT
