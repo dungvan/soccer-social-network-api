@@ -2,11 +2,13 @@ package match
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/dungvan2512/soccer-social-network/infrastructure"
 	"github.com/dungvan2512/soccer-social-network/shared/auth"
 	"github.com/dungvan2512/soccer-social-network/shared/base"
 	"github.com/dungvan2512/soccer-social-network/shared/utils"
+	"github.com/go-chi/chi"
 	"github.com/sirupsen/logrus"
 )
 
@@ -49,6 +51,31 @@ func (h *HTTPHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	h.ResponseJSON(w, CreateResponse{matchID})
+}
+
+// Show handler
+func (h *HTTPHandler) Show(w http.ResponseWriter, r *http.Request) {
+	matchID, err := strconv.Atoi(chi.URLParam(r, "match_id"))
+	response, err := h.usecase.Show(uint(matchID))
+	if err != nil {
+		h.Logger.WithFields(logrus.Fields{
+			"error": err,
+		}).Error("usecase.CountUpStar() error")
+		if response.TypeOfStatusCode == http.StatusBadRequest {
+			common := utils.CommonResponse{Message: "Bad request error response", Errors: []string{err.Error()}}
+			h.StatusBadRequest(w, common)
+			return
+		}
+		if response.TypeOfStatusCode == http.StatusNotFound {
+			h.StatusNotFoundRequest(w, nil)
+			return
+		}
+		common := utils.CommonResponse{Message: "Internal server error response", Errors: []string{}}
+		h.StatusServerError(w, common)
+		return
+	}
+
+	h.ResponseJSON(w, response)
 }
 
 // NewHTTPHandler return new HTTPHandler instance.

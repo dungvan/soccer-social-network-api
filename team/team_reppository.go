@@ -52,7 +52,7 @@ func (r *repository) GetAllTeamsByPlayerUserID(playerUserID uint) ([]model.Team,
 	teams := make([]model.Team, 0)
 	err := r.db.Model(&model.Team{}).
 		Select("teams.id, teams.name, teams.description, teams.created_at").
-		Joins(`INNER JOIN team_players ON team_players.team_id = teams.id`).
+		Joins(`INNER JOIN team_players ON (team_players.team_id = teams.id AND team_players.deleted_at IS NULL)`).
 		Where("team_players.user_id = ?", playerUserID).
 		Limit(100).
 		Order("teams.created_at desc, teams.id desc").
@@ -85,7 +85,7 @@ func (r *repository) GetTeamMaster(teamID uint) (*model.User, error) {
 	mstUser := model.User{}
 	result := r.db.Model(&mstUser).
 		Select("users.id, users.user_name, users.full_name").
-		Joins(`INNER JOIN masters ON masters.user_id = users.id`).
+		Joins(`INNER JOIN masters ON (masters.user_id = users.id  AND masters.deleted_at IS NULL)`).
 		Joins(`INNER JOIN teams ON (teams.id = masters.owner_id AND masters.owner_type = 'teams' AND teams.id = ? AND teams.deleted_at IS NULL)`, teamID).
 		Scan(&mstUser)
 	return &mstUser, utils.ErrorsWrap(result.Error, "can't get team-master relation")

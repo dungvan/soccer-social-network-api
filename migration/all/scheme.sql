@@ -193,7 +193,7 @@ CREATE TABLE "matches"
 (
 	id serial NOT NULL UNIQUE,
 	description text,
-	star_date timestamp NOT NULL,
+	start_date timestamp NOT NULL,
 	team1_id int NOT NULL,
 	team2_id int NOT NULL,
 	created_at timestamp,
@@ -291,6 +291,13 @@ ALTER TABLE team_players
 
 ALTER TABLE matches
 	ADD FOREIGN KEY (team1_id)
+	REFERENCES "teams" (id)
+	ON UPDATE RESTRICT
+	ON DELETE RESTRICT
+;
+
+ALTER TABLE matches
+	ADD FOREIGN KEY (team2_id)
 	REFERENCES "teams" (id)
 	ON UPDATE RESTRICT
 	ON DELETE RESTRICT

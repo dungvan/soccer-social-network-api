@@ -68,6 +68,7 @@ func (h *HTTPHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 // Update handler
 func (h *HTTPHandler) Update(w http.ResponseWriter, r *http.Request) {
+	// implement here
 	h.ResponseJSON(w, struct {
 		Message string `json:"message"`
 	}{"this is sample response"})
@@ -100,6 +101,7 @@ func (h *HTTPHandler) Show(w http.ResponseWriter, r *http.Request) {
 
 // Delete handler
 func (h *HTTPHandler) Delete(w http.ResponseWriter, r *http.Request) {
+	// implement here
 	h.ResponseJSON(w, struct {
 		Message string `json:"message"`
 	}{"this is sample response"})

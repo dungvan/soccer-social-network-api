@@ -87,5 +87,8 @@ func (r *Router) SetupHandler() {
 	r.Mux.Route("/matches", func(cr chi.Router) {
 		cr.Use(mMiddleware.JwtAuth(r.LoggerHandler, r.SQLHandler.DB))
 		cr.Post("/", mh.Create)
+		cr.Route("/{match_id:0*([1-9])([0-9]?)+}", func(cr chi.Router) {
+			cr.Get("/", mh.Show)
+		})
 	})
 }
