@@ -6,6 +6,7 @@ DROP TABLE IF EXISTS "star_counts";
 DROP TABLE IF EXISTS "post_hashtags";
 DROP TABLE IF EXISTS "posts_stars";
 DROP TABLE IF EXISTS "team_players";
+DROP TABLE IF EXISTS "tournament_teams";
 DROP TABLE IF EXISTS "hashtags";
 DROP TABLE IF EXISTS "images";
 DROP TABLE IF EXISTS "videos";
@@ -14,6 +15,7 @@ DROP TABLE IF EXISTS "players";
 DROP TABLE IF EXISTS "masters";
 DROP TABLE IF EXISTS "matchs";
 DROP TABLE IF EXISTS "teams";
+DROP TABLE IF EXISTS "tournaments";
 DROP TABLE IF EXISTS "user_follows";
 DROP TABLE IF EXISTS "users";
 DROP TABLE IF EXISTS "locations";
@@ -204,6 +206,38 @@ CREATE TABLE "matches"
 
 ALTER SEQUENCE matches_id_SEQ INCREMENT 1 RESTART 1;
 
+CREATE TABLE "tournaments"
+(
+	id serial NOT NULL UNIQUE,
+	name varchar(256) NOT NULL,
+	description text,
+	start_date timestamp NOT NULL,
+	end_date timestamp NOT NULL,
+	created_at timestamp,
+	updated_at timestamp,
+	deleted_at timestamp,
+	PRIMARY KEY (id)
+) WITHOUT OIDS;
+
+ALTER SEQUENCE tournaments_id_SEQ INCREMENT 1 RESTART 1;
+
+
+CREATE TABLE "tournament_teams"
+(
+	id serial NOT NULL UNIQUE,
+	tournament_id int NOT NULL,
+	team_id int NOT NULL,
+	score int DEFAULT 0,
+	"group" VARCHAR(256),
+	created_at timestamp,
+	updated_at timestamp,
+	deleted_at timestamp,
+	PRIMARY KEY (id),
+	CONSTRAINT tournament_teams_tournament_id_team_id_UNIQUE UNIQUE (tournament_id, team_id)
+) WITHOUT OIDS;
+
+ALTER SEQUENCE tournament_teams_id_SEQ INCREMENT 1 RESTART 1;
+
 CREATE TABLE "masters"
 (
 	id serial NOT NULL UNIQUE,
@@ -306,6 +340,20 @@ ALTER TABLE matches
 ALTER TABLE masters
 	ADD FOREIGN KEY (user_id)
 	REFERENCES "users" (id)
+	ON UPDATE RESTRICT
+	ON DELETE RESTRICT
+;
+
+ALTER TABLE tournament_teams
+	ADD FOREIGN KEY (tournament_id)
+	REFERENCES "tournaments" (id)
+	ON UPDATE RESTRICT
+	ON DELETE RESTRICT
+;
+
+ALTER TABLE tournament_teams
+	ADD FOREIGN KEY (team_id)
+	REFERENCES "teams" (id)
 	ON UPDATE RESTRICT
 	ON DELETE RESTRICT
 ;
