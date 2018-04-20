@@ -8,6 +8,7 @@ import (
 	module "github.com/dungvan2512/soccer-social-network/sample-module"
 	"github.com/dungvan2512/soccer-social-network/shared/base"
 	mMiddleware "github.com/dungvan2512/soccer-social-network/shared/middleware"
+	"github.com/dungvan2512/soccer-social-network/team"
 	"github.com/dungvan2512/soccer-social-network/user"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
@@ -54,8 +55,9 @@ func (r *Router) SetupHandler() {
 	uh := user.NewHTTPHandler(bh, bu, br, r.SQLHandler, r.CacheHandler)
 	// post set
 	ph := post.NewHTTPHandler(bh, bu, br, r.SQLHandler, r.CacheHandler, r.S3Handler)
-	// authentication middleware.
-	// authMiddleware := mMiddleware.JwtAuth(r.LoggerHandler, r.SQLHandler.DB)
+	// team set
+	th := team.NewHTTPHandler(bh, bu, br, r.SQLHandler, r.CacheHandler)
+
 	r.Mux.Route("/", func(cr chi.Router) {
 		cr.Get("/sample", mh.SampleHandler)
 	})
@@ -74,6 +76,15 @@ func (r *Router) SetupHandler() {
 			cr.Get("/", ph.Show)
 			cr.Post("/star", ph.UpStar)
 			cr.Delete("/star", ph.DeleteStar)
+		})
+	})
+
+	r.Mux.Route("/teams", func(cr chi.Router) {
+		cr.Use(mMiddleware.JwtAuth(r.LoggerHandler, r.SQLHandler.DB))
+		cr.Get("/", th.Index)
+		cr.Post("/", th.Create)
+		cr.Route("/{team_id:0*([1-9])([0-9]?)+}", func(cr chi.Router) {
+			cr.Get("/", th.Show)
 		})
 	})
 }

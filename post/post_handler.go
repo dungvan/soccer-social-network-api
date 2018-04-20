@@ -48,7 +48,7 @@ func (h *HTTPHandler) Create(w http.ResponseWriter, r *http.Request) {
 		h.StatusServerError(w, common)
 		return
 	}
-	request.User = auth.GetUserFromContext(r.Context())
+	request.UserID = auth.GetUserFromContext(r.Context()).ID
 	// validate get data.
 	if err = h.Validate(w, request); err != nil {
 		return

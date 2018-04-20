@@ -7,6 +7,7 @@ import (
 // TeamPlayer table struct
 type TeamPlayer struct {
 	*gorm.Model
-	TeamID uint
-	UserID uint
+	TeamID   uint
+	UserID   uint
+	Position string
 }

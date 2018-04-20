@@ -14,7 +14,6 @@ type User struct {
 	FullName string
 	Birthday string
 	Score    uint
-	Position string
 }
 
 // HashAndSaltPassword encrypt password

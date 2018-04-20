@@ -42,7 +42,6 @@ func (u *usecase) Index(userID uint) (IndexResponse, error) {
 	if err != nil {
 		return indexResp, utils.ErrorsWrap(err, "repository.GetAllPostsByUserID() error.")
 	}
-	indexResp.ResultCount = len(result)
 	indexResp.Posts = []RespPost{}
 
 	bucketName := infrastructure.GetConfigString("objectstorage.bucketname")
@@ -77,6 +76,7 @@ func (u *usecase) Index(userID uint) (IndexResponse, error) {
 		}
 		indexResp.Posts = append(indexResp.Posts, data)
 	}
+	indexResp.ResultCount = len(result)
 	return indexResp, err
 }
 
@@ -90,7 +90,7 @@ func (u *usecase) Create(r CreateRequest) (uint, error) {
 			tx.Commit()
 		}
 	}()
-	post := model.Post{UserID: r.User.ID, Caption: r.Caption, StarCount: &model.StarCount{Quantity: 0}}
+	post := &model.Post{UserID: r.UserID, Caption: r.Caption, StarCount: &model.StarCount{Quantity: 0}}
 
 	if r.PlaceID != "" {
 
@@ -104,7 +104,7 @@ func (u *usecase) Create(r CreateRequest) (uint, error) {
 	if r.Videos != nil {
 
 	}
-	postResponse, err := u.repository.CreatePost(post, tx)
+	err := u.repository.CreatePost(post, tx)
 	if err != nil {
 		isError = true
 		return 0, err
@@ -126,13 +126,13 @@ func (u *usecase) Create(r CreateRequest) (uint, error) {
 		}
 	}
 
-	err = u.repository.CreatePostHashtags(postResponse.ID, hashtagsID, tx)
+	err = u.repository.CreatePostHashtags(post.ID, hashtagsID, tx)
 	if err != nil {
 		isError = true
 		return 0, utils.ErrorsWrap(err, "repository.CreatePostHashtags error")
 	}
 
-	return postResponse.ID, nil
+	return post.ID, nil
 }
 
 func (u *usecase) Show(postID uint) (RespPost, error) {

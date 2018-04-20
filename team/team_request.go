@@ -6,13 +6,14 @@ type IndexRequest struct {
 
 // CreateRequest struct
 type CreateRequest struct {
-	MasterID    uint            `json:"master_id" validate:"required"`
-	Description string          `json:"description"`
+	UserID      uint            `json:"user_id" validate:"required"`
+	Name        string          `json:"name" validate:"required"`
+	Description string          `json:"description" validate:"required"`
 	Players     []PlayerRequest `json:"players" validate:"required,max=16,dive"`
 }
 
 // PlayerRequest struct
 type PlayerRequest struct {
 	ID       uint   `json:"id" validate:"required"`
-	Position string `json:"position" validate:"required,eq="`
+	Position string `json:"position" validate:"required,eq=gk|eq=sw|eq=cb|eq=lb|eq=rb|eq=dm|eq=lwb|eq=rwb|eq=cm|eq=am|eq=lw|eq=rw|eq=wf|eq=cf|eq=any"`
 }

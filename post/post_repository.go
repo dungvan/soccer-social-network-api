@@ -3,6 +3,7 @@ package post
 import (
 	"errors"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/dungvan2512/soccer-social-network/infrastructure"
@@ -18,7 +19,7 @@ type Repository interface {
 	// GetAllPostsByUserID return all of post record
 	GetAllPostsByUserID(userID uint) ([]model.Post, error)
 	// CreatePost registers record to table post
-	CreatePost(post model.Post, transaction *gorm.DB) (*model.Post, error)
+	CreatePost(post *model.Post, transaction *gorm.DB) error
 	// CreateHashtags is insert hashtag list into hashtag table if it does not exist.
 	CreateHashtags(hashtags []string, transaction *gorm.DB) error
 	// GetHashTagsIDByKeyWords get array id hashtag from hashtags request.
@@ -62,21 +63,21 @@ func (r *repository) GetAllPostsByUserID(userID uint) ([]model.Post, error) {
 	return posts, utils.ErrorsWrap(err, "can't get post.")
 }
 
-func (r *repository) CreatePost(p model.Post, tx *gorm.DB) (*model.Post, error) {
-	result := tx.Create(&p)
-	return &p, utils.ErrorsWrap(result.Error, "can't create post")
+func (r *repository) CreatePost(p *model.Post, tx *gorm.DB) error {
+	result := tx.Create(p)
+	return utils.ErrorsWrap(result.Error, "can't create post")
 }
 
 func (r *repository) CreateHashtags(hashtags []string, tx *gorm.DB) error {
 	if len(hashtags) == 0 {
 		return nil
 	}
-	sql := "INSERT INTO hashtags (key_word) VALUES "
+	sql := "INSERT INTO hashtags (key_word, created_at, updated_at) VALUES "
 	vals := []interface{}{}
 	params := []string{}
 	for _, hashtag := range hashtags {
-		params = append(params, "(?)")
-		vals = append(vals, hashtag)
+		params = append(params, "(?, ?, ?)")
+		vals = append(vals, hashtag, time.Now(), time.Now())
 	}
 	sql += strings.Join(params, ",")
 	sql += " ON CONFLICT (key_word) DO NOTHING"
@@ -105,7 +106,7 @@ func (r *repository) GetHashTagsIDByKeyWords(hashtags []string, tx *gorm.DB) ([]
 	return hashtagsID, nil
 }
 
-func (r *repository) CreatePostHashtags(oufitID uint, hashtagsID []uint, tx *gorm.DB) error {
+func (r *repository) CreatePostHashtags(postID uint, hashtagsID []uint, tx *gorm.DB) error {
 	if len(hashtagsID) == 0 {
 		return nil
 	}
@@ -114,7 +115,7 @@ func (r *repository) CreatePostHashtags(oufitID uint, hashtagsID []uint, tx *gor
 	params := []string{}
 	for _, hashtagID := range hashtagsID {
 		params = append(params, "(?, ?)")
-		vals = append(vals, oufitID, hashtagID)
+		vals = append(vals, postID, hashtagID)
 	}
 	sqlStr += strings.Join(params, ",")
 	err := tx.Exec(sqlStr, vals...).Error

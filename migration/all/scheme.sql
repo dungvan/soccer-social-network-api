@@ -27,6 +27,7 @@ CREATE TABLE "users"
 	password VARCHAR(256),
 	full_name VARCHAR(256),
 	birthday DATE,
+	score int DEFAULT 0,
 	created_at timestamp,
 	updated_at timestamp,
 	deleted_at timestamp,
@@ -80,7 +81,7 @@ CREATE TABLE "hashtags"
 (
 	id serial NOT NULL UNIQUE,
 	"key_word" varchar UNIQUE,
-	post_count int,
+	post_count int DEFAULT 0,
 	created_at timestamp,
 	updated_at timestamp,
 	deleted_at timestamp,
@@ -161,6 +162,8 @@ ALTER SEQUENCE star_counts_id_SEQ INCREMENT 1 RESTART 1;
 CREATE TABLE "teams"
 (
 	id serial NOT NULL UNIQUE,
+	name VARCHAR(256) NOT NULL,
+	description text,
 	max_members int DEFAULT 16,
 	created_at timestamp,
 	updated_at timestamp,
@@ -174,7 +177,8 @@ CREATE TABLE "team_players"
 (
 	id serial NOT NULL UNIQUE,
 	user_id int NOT NULL,
-	team_id int NOT NULL, 
+	team_id int NOT NULL,
+	position VARCHAR(10) NOT NULL, 
 	created_at timestamp,
 	updated_at timestamp,
 	deleted_at timestamp,
