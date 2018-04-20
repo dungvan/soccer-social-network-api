@@ -9,9 +9,9 @@ import (
 // Match table struct
 type Match struct {
 	*gorm.Model
-	Master      []Master `gorm:"polymorphic:Owner"`
+	Master      *Master `gorm:"polymorphic:Owner"`
 	Description string
-	DateStart   time.Time
+	StartDate   time.Time
 	Team1ID     uint
 	Team2ID     uint
 	Location    *Location

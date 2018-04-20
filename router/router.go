@@ -4,8 +4,8 @@ import (
 	"net/http"
 
 	"github.com/dungvan2512/soccer-social-network/infrastructure"
+	"github.com/dungvan2512/soccer-social-network/match"
 	"github.com/dungvan2512/soccer-social-network/post"
-	module "github.com/dungvan2512/soccer-social-network/sample-module"
 	"github.com/dungvan2512/soccer-social-network/shared/base"
 	mMiddleware "github.com/dungvan2512/soccer-social-network/shared/middleware"
 	"github.com/dungvan2512/soccer-social-network/team"
@@ -49,18 +49,14 @@ func (r *Router) SetupHandler() {
 	br := base.NewRepository(r.LoggerHandler.Log)
 	// base set.
 	bu := base.NewUsecase(r.LoggerHandler.Log)
-	// sample set.
-	mh := module.NewHTTPHandler(bh, bu, br, r.SQLHandler, r.CacheHandler)
 	// user set
 	uh := user.NewHTTPHandler(bh, bu, br, r.SQLHandler, r.CacheHandler)
 	// post set
 	ph := post.NewHTTPHandler(bh, bu, br, r.SQLHandler, r.CacheHandler, r.S3Handler)
 	// team set
 	th := team.NewHTTPHandler(bh, bu, br, r.SQLHandler, r.CacheHandler)
-
-	r.Mux.Route("/", func(cr chi.Router) {
-		cr.Get("/sample", mh.SampleHandler)
-	})
+	// match set
+	mh := match.NewHTTPHandler(bh, bu, br, r.SQLHandler, r.CacheHandler)
 
 	r.Mux.Route("/users", func(cr chi.Router) {
 		cr.Post("/register", uh.Register)
@@ -86,5 +82,10 @@ func (r *Router) SetupHandler() {
 		cr.Route("/{team_id:0*([1-9])([0-9]?)+}", func(cr chi.Router) {
 			cr.Get("/", th.Show)
 		})
+	})
+
+	r.Mux.Route("/matches", func(cr chi.Router) {
+		cr.Use(mMiddleware.JwtAuth(r.LoggerHandler, r.SQLHandler.DB))
+		cr.Post("/", mh.Create)
 	})
 }

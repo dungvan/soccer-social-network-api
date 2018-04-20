@@ -12,6 +12,7 @@ DROP TABLE IF EXISTS "videos";
 DROP TABLE IF EXISTS "posts";
 DROP TABLE IF EXISTS "players";
 DROP TABLE IF EXISTS "masters";
+DROP TABLE IF EXISTS "matchs";
 DROP TABLE IF EXISTS "teams";
 DROP TABLE IF EXISTS "user_follows";
 DROP TABLE IF EXISTS "users";
@@ -188,6 +189,21 @@ CREATE TABLE "team_players"
 
 ALTER SEQUENCE team_players_id_SEQ INCREMENT 1 RESTART 1;
 
+CREATE TABLE "matches"
+(
+	id serial NOT NULL UNIQUE,
+	description text,
+	star_date timestamp NOT NULL,
+	team1_id int NOT NULL,
+	team2_id int NOT NULL,
+	created_at timestamp,
+	updated_at timestamp,
+	deleted_at timestamp,
+	PRIMARY KEY (id)
+) WITHOUT OIDS;
+
+ALTER SEQUENCE matches_id_SEQ INCREMENT 1 RESTART 1;
+
 CREATE TABLE "masters"
 (
 	id serial NOT NULL UNIQUE,
@@ -268,6 +284,13 @@ ALTER TABLE team_players
 
 ALTER TABLE team_players
 	ADD FOREIGN KEY (team_id)
+	REFERENCES "teams" (id)
+	ON UPDATE RESTRICT
+	ON DELETE RESTRICT
+;
+
+ALTER TABLE matches
+	ADD FOREIGN KEY (team1_id)
 	REFERENCES "teams" (id)
 	ON UPDATE RESTRICT
 	ON DELETE RESTRICT

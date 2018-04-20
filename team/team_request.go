@@ -1,12 +1,8 @@
 package team
 
-// IndexRequest struct
-type IndexRequest struct {
-}
-
 // CreateRequest struct
 type CreateRequest struct {
-	UserID      uint            `json:"user_id" validate:"required"`
+	UserID      uint            `validate:"required"`
 	Name        string          `json:"name" validate:"required"`
 	Description string          `json:"description" validate:"required"`
 	Players     []PlayerRequest `json:"players" validate:"required,max=16,dive"`
