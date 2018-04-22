@@ -110,12 +110,12 @@ func (r *repository) CreatePostHashtags(postID uint, hashtagsID []uint, tx *gorm
 	if len(hashtagsID) == 0 {
 		return nil
 	}
-	sqlStr := "INSERT INTO post_hashtags(post_id, hashtag_id) VALUES "
+	sqlStr := "INSERT INTO post_hashtags(post_id, hashtag_id, created_at, updated_at) VALUES "
 	vals := []interface{}{}
 	params := []string{}
 	for _, hashtagID := range hashtagsID {
-		params = append(params, "(?, ?)")
-		vals = append(vals, postID, hashtagID)
+		params = append(params, "(?, ?, ?, ?)")
+		vals = append(vals, postID, hashtagID, time.Now(), time.Now())
 	}
 	sqlStr += strings.Join(params, ",")
 	err := tx.Exec(sqlStr, vals...).Error

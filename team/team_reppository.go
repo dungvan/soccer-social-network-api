@@ -95,8 +95,7 @@ func (r *repository) GetTeamPlayers(teamID uint) ([]Player, error) {
 	players := make([]Player, 0)
 	result := r.db.Model(&model.User{}).
 		Select("users.id, users.full_name, users.user_name, users.score, team_players.position").
-		Joins(`INNER JOIN team_players ON team_players.user_id = users.id`).
-		Where("team_players.team_id = ?", teamID).
+		Joins(`INNER JOIN team_players ON team_players.user_id = users.id AND team_players.team_id = ? AND team_players.deleted_at IS NULL`, teamID).
 		Scan(&players)
 	return players, utils.ErrorsWrap(result.Error, "can't get team-players relation")
 }

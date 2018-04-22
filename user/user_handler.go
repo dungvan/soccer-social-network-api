@@ -32,6 +32,7 @@ func (h *HTTPHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
+		h.Logger.Error(err, "h.ParseJson() error")
 		common := utils.CommonResponse{Message: "internal server error.", Errors: nil}
 		h.StatusServerError(w, common)
 		return

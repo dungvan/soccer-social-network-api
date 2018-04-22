@@ -194,6 +194,7 @@ ALTER SEQUENCE team_players_id_SEQ INCREMENT 1 RESTART 1;
 CREATE TABLE "matches"
 (
 	id serial NOT NULL UNIQUE,
+	tournament_id int,
 	description text,
 	start_date timestamp NOT NULL,
 	team1_id int NOT NULL,
@@ -322,6 +323,14 @@ ALTER TABLE team_players
 	ON UPDATE RESTRICT
 	ON DELETE RESTRICT
 ;
+
+ALTER TABLE matches
+	ADD FOREIGN KEY (tournament_id)
+	REFERENCES "tournaments" (id)
+	ON UPDATE RESTRICT
+	ON DELETE RESTRICT
+;
+
 
 ALTER TABLE matches
 	ADD FOREIGN KEY (team1_id)

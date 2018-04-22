@@ -9,6 +9,7 @@ import (
 	"github.com/dungvan2512/soccer-social-network/shared/base"
 	mMiddleware "github.com/dungvan2512/soccer-social-network/shared/middleware"
 	"github.com/dungvan2512/soccer-social-network/team"
+	"github.com/dungvan2512/soccer-social-network/tournament"
 	"github.com/dungvan2512/soccer-social-network/user"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
@@ -57,6 +58,8 @@ func (r *Router) SetupHandler() {
 	th := team.NewHTTPHandler(bh, bu, br, r.SQLHandler, r.CacheHandler)
 	// match set
 	mh := match.NewHTTPHandler(bh, bu, br, r.SQLHandler, r.CacheHandler)
+	// match set
+	toh := tournament.NewHTTPHandler(bh, bu, br, r.SQLHandler, r.CacheHandler)
 
 	r.Mux.Route("/users", func(cr chi.Router) {
 		cr.Post("/register", uh.Register)
@@ -89,6 +92,14 @@ func (r *Router) SetupHandler() {
 		cr.Post("/", mh.Create)
 		cr.Route("/{match_id:0*([1-9])([0-9]?)+}", func(cr chi.Router) {
 			cr.Get("/", mh.Show)
+		})
+	})
+
+	r.Mux.Route("/tournaments", func(cr chi.Router) {
+		cr.Use(mMiddleware.JwtAuth(r.LoggerHandler, r.SQLHandler.DB))
+		cr.Post("/", toh.Create)
+		cr.Route("/{tournaments_id:0*([1-9])([0-9]?)+}", func(cr chi.Router) {
+			cr.Get("/", toh.Show)
 		})
 	})
 }
