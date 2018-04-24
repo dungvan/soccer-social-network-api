@@ -4,6 +4,7 @@ import (
 	"github.com/dungvan2512/soccer-social-network/model"
 	"github.com/dungvan2512/soccer-social-network/shared/auth"
 	"github.com/dungvan2512/soccer-social-network/shared/base"
+	"github.com/dungvan2512/soccer-social-network/shared/utils"
 	"github.com/garyburd/redigo/redis"
 	"github.com/jinzhu/gorm"
 )
@@ -38,14 +39,20 @@ func (r *repository) CreateUser(u model.User) error {
 
 func (r *repository) FindUserByUserName(userName string) (*model.User, error) {
 	user := &model.User{}
-	find := r.db.Where("user_name = ?", userName).First(user)
-	return user, find.Error
+	err := r.db.Where("user_name = ?", userName).First(user).Error
+	if err == gorm.ErrRecordNotFound {
+		return user, err
+	}
+	return user, utils.ErrorsWrap(err, "can't find user")
 }
 
 func (r *repository) FindUserByEmail(emmail string) (*model.User, error) {
 	user := &model.User{}
-	find := r.db.Where("email = ?", email).First(user)
-	return user, find.Error
+	err := r.db.Where("email = ?", email).First(user).Error
+	if err == gorm.ErrRecordNotFound {
+		return user, err
+	}
+	return user, utils.ErrorsWrap(err, "can't find user")
 }
 
 func (r *repository) CheckLogin(user model.User, password string) bool {

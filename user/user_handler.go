@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/dungvan2512/soccer-social-network/shared/auth"
+	"github.com/go-chi/chi"
 
 	"github.com/dungvan2512/soccer-social-network/infrastructure"
 	"github.com/dungvan2512/soccer-social-network/shared/base"
@@ -14,14 +15,22 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// HTTPHandler struct
-type HTTPHandler struct {
+// HTTPHandler interface
+type HTTPHandler interface {
+	Register(w http.ResponseWriter, r *http.Request)
+	Login(w http.ResponseWriter, r *http.Request)
+	Show(w http.ResponseWriter, r *http.Request)
+	FriendRequest(w http.ResponseWriter, r *http.Request)
+}
+
+// handler struct
+type handler struct {
 	base.HTTPHandler
 	usecase Usecase
 }
 
 // Register handler
-func (h *HTTPHandler) Register(w http.ResponseWriter, r *http.Request) {
+func (h *handler) Register(w http.ResponseWriter, r *http.Request) {
 	i, _ := net.Interfaces()
 	fmt.Println(i)
 	request := &RegisterReuqest{}
@@ -68,7 +77,7 @@ func (h *HTTPHandler) Register(w http.ResponseWriter, r *http.Request) {
 }
 
 // Login handler
-func (h *HTTPHandler) Login(w http.ResponseWriter, r *http.Request) {
+func (h *handler) Login(w http.ResponseWriter, r *http.Request) {
 	request := &LoginRequest{}
 	messages, err := h.ParseJSON(r, request)
 	if len(messages) != 0 {
@@ -109,8 +118,31 @@ func (h *HTTPHandler) Login(w http.ResponseWriter, r *http.Request) {
 	h.ResponseJSON(w, response)
 }
 
+func (h *handler) Show(w http.ResponseWriter, r *http.Request) {
+	userName := chi.URLParam(r, "user_name")
+	response, err := h.usecase.Show(userName)
+	if err != nil {
+		h.Logger.WithFields(logrus.Fields{
+			"error": err,
+		}).Error("usecase.Show() error")
+		if response.TypeOfStatusCode == http.StatusBadRequest {
+			common := utils.CommonResponse{Message: "Bad request error response", Errors: []string{err.Error()}}
+			h.StatusBadRequest(w, common)
+			return
+		}
+		if response.TypeOfStatusCode == http.StatusNotFound {
+			h.StatusNotFoundRequest(w, nil)
+			return
+		}
+		common := utils.CommonResponse{Message: "Internal server error response", Errors: []string{}}
+		h.StatusServerError(w, common)
+		return
+	}
+	h.ResponseJSON(w, response)
+}
+
 // FriendRequest is user request connection to other
-func (h *HTTPHandler) FriendRequest(w http.ResponseWriter, r *http.Request) {
+func (h *handler) FriendRequest(w http.ResponseWriter, r *http.Request) {
 	request := &FriendRequest{}
 	messages, err := h.ParseJSON(r, request)
 	if len(messages) != 0 {
@@ -134,8 +166,8 @@ func (h *HTTPHandler) FriendRequest(w http.ResponseWriter, r *http.Request) {
 }
 
 // NewHTTPHandler responses new HTTPHandler instance.
-func NewHTTPHandler(bh *base.HTTPHandler, bu *base.Usecase, br *base.Repository, s *infrastructure.SQL, c *infrastructure.Cache) *HTTPHandler {
+func NewHTTPHandler(bh *base.HTTPHandler, bu *base.Usecase, br *base.Repository, s *infrastructure.SQL, c *infrastructure.Cache) HTTPHandler {
 	userRepo := NewRepository(br, s.DB, c.Conn)
 	userUsecase := NewUsecase(bu, s.DB, userRepo)
-	return &HTTPHandler{HTTPHandler: *bh, usecase: userUsecase}
+	return &handler{HTTPHandler: *bh, usecase: userUsecase}
 }

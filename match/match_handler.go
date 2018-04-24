@@ -60,7 +60,7 @@ func (h *HTTPHandler) Show(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		h.Logger.WithFields(logrus.Fields{
 			"error": err,
-		}).Error("usecase.CountUpStar() error")
+		}).Error("usecase.Show() error")
 		if response.TypeOfStatusCode == http.StatusBadRequest {
 			common := utils.CommonResponse{Message: "Bad request error response", Errors: []string{err.Error()}}
 			h.StatusBadRequest(w, common)

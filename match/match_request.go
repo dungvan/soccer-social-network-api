@@ -6,7 +6,7 @@ import (
 
 // CreateRequest struct
 type CreateRequest struct {
-	TournamentID uint      `json:"tourmanent_id" validate:"omitempty,required"`
+	TournamentID *uint     `json:"tourmanent_id" validate:"omitempty,required"`
 	UserID       uint      `validate:"required"`
 	Description  string    `json:"description" validate:"required"`
 	StartDate    time.Time `json:"start_date" validate:"required"`

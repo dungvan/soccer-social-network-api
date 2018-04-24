@@ -1,6 +1,7 @@
 package user
 
 import (
+	"net/http"
 	"strings"
 
 	"github.com/dungvan2512/soccer-social-network/model"
@@ -17,6 +18,8 @@ type Usecase interface {
 	Login(LoginRequest) (token string, err error)
 	// SendFriendRequest usecase
 	SendFriendRequest(FriendRequest) error
+	// Show a user
+	Show(userName string) (RespUser, error)
 }
 
 type usecase struct {
@@ -63,6 +66,24 @@ func (u *usecase) Login(l LoginRequest) (string, error) {
 
 func (u *usecase) SendFriendRequest(FriendRequest) error {
 	return nil
+}
+
+func (u *usecase) Show(userName string) (RespUser, error) {
+	user, err := u.repository.FindUserByUserName(userName)
+	if err == gorm.ErrRecordNotFound {
+		return RespUser{TypeOfStatusCode: http.StatusNotFound}, utils.ErrorsNew("the Match dose not exist")
+	} else if err != nil {
+		return RespUser{}, utils.ErrorsWrap(err, "repository.FinduserByID error")
+	}
+	respUserData := RespUser{
+		ID:       user.ID,
+		UserName: user.UserName,
+		Email:    user.Email,
+		Fullname: user.FullName,
+		Birthday: user.Birthday,
+	}
+
+	return respUserData, nil
 }
 
 // NewUsecase responses new Usecase instance.

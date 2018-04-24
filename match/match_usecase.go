@@ -26,11 +26,12 @@ type usecase struct {
 func (u *usecase) Create(r CreateRequest) (matchID uint, err error) {
 	isError := false
 	match := &model.Match{
-		Master:      &model.Master{UserID: r.UserID},
-		Description: r.Description,
-		StartDate:   r.StartDate,
-		Team1ID:     r.Team1ID,
-		Team2ID:     r.Team2ID,
+		TournamentID: r.TournamentID,
+		Master:       &model.Master{UserID: r.UserID},
+		Description:  r.Description,
+		StartDate:    r.StartDate,
+		Team1ID:      r.Team1ID,
+		Team2ID:      r.Team2ID,
 	}
 	tx := u.db.Begin()
 	defer func() {

@@ -9,10 +9,11 @@ import (
 // Match table struct
 type Match struct {
 	*gorm.Model
-	Master      *Master `gorm:"polymorphic:Owner"`
-	Description string
-	StartDate   time.Time
-	Team1ID     uint
-	Team2ID     uint
-	Location    *Location
+	TournamentID *uint
+	Master       *Master `gorm:"polymorphic:Owner"`
+	Description  string
+	StartDate    time.Time
+	Team1ID      uint
+	Team2ID      uint
+	Location     *Location
 }
