@@ -33,6 +33,8 @@ func (r *Router) InitializeRouter() {
 	r.Mux.Use(r.TranslationHandler.Middleware.Middleware)
 	// Custom middleware(Logger)
 	r.Mux.Use(mMiddleware.Logger(r.LoggerHandler))
+	// CORS middleware
+	r.Mux.Use(mMiddleware.CORS(r.LoggerHandler))
 }
 
 // SetupHandler set database and redis and usecase.

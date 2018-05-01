@@ -1,6 +1,8 @@
 package model
 
 import (
+	"time"
+
 	"github.com/jinzhu/gorm"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -12,7 +14,7 @@ type User struct {
 	Email    string
 	Password string
 	FullName string
-	Birthday string
+	Birthday time.Time
 	Score    uint
 }
 
