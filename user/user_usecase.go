@@ -15,7 +15,7 @@ type Usecase interface {
 	// Register usecase
 	Register(RegisterReuqest) error
 	// Login usecase
-	Login(LoginRequest) (token string, err error)
+	Login(LoginRequest) (LoginResponse, error)
 	// SendFriendRequest usecase
 	SendFriendRequest(FriendRequest) error
 	// Show a user
@@ -29,7 +29,7 @@ type usecase struct {
 }
 
 func (u *usecase) Register(r RegisterReuqest) error {
-	user := model.User{UserName: r.UserName, Email: r.Email, Password: r.Password, FullName: r.FullName, Birthday: r.Birthday}.HashAndSaltPassword()
+	user := model.User{UserName: r.UserName, Email: r.Email, Password: r.Password, FirstName: r.FirstName, LastName: r.LastName}.HashAndSaltPassword()
 	err := u.repository.CreateUser(user)
 	if err != nil {
 		return err
@@ -37,7 +37,7 @@ func (u *usecase) Register(r RegisterReuqest) error {
 	return nil
 }
 
-func (u *usecase) Login(l LoginRequest) (string, error) {
+func (u *usecase) Login(l LoginRequest) (LoginResponse, error) {
 	var user *model.User
 	var err error
 	var token string
@@ -48,20 +48,20 @@ func (u *usecase) Login(l LoginRequest) (string, error) {
 	}
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return "", errUserNameOrPassword
+			return LoginResponse{}, errUserNameOrPassword
 		}
-		return "", err
+		return LoginResponse{}, err
 	}
 	if ok := u.repository.CheckLogin(*user, l.Password); ok {
 		// store user to JWT
 		token, err = u.repository.GenerateToken(user)
 		if err != nil {
-			return "", utils.ErrorsWrap(err, "repository.GenerateToken() error")
+			return LoginResponse{}, utils.ErrorsWrap(err, "repository.GenerateToken() error")
 		}
 	} else {
-		return "", errUserNameOrPassword
+		return LoginResponse{}, errUserNameOrPassword
 	}
-	return token, nil
+	return LoginResponse{ID: user.ID, UserName: user.UserName, Token: token}, nil
 }
 
 func (u *usecase) SendFriendRequest(FriendRequest) error {
@@ -76,11 +76,11 @@ func (u *usecase) Show(userName string) (RespUser, error) {
 		return RespUser{}, utils.ErrorsWrap(err, "repository.FinduserByID error")
 	}
 	respUserData := RespUser{
-		ID:       user.ID,
-		UserName: user.UserName,
-		Email:    user.Email,
-		Fullname: user.FullName,
-		Birthday: user.Birthday,
+		ID:        user.ID,
+		UserName:  user.UserName,
+		Email:     user.Email,
+		FirstName: user.FirstName,
+		LastName:  user.LastName,
 	}
 
 	return respUserData, nil

@@ -68,9 +68,10 @@ func (u *usecase) Show(tournamentID uint) (RespTournament, error) {
 	respTournamentData := RespTournament{
 		ID: tournament.ID,
 		Master: RespMaster{
-			ID:       mstUser.ID,
-			UserName: mstUser.UserName,
-			FullName: mstUser.FullName,
+			ID:        mstUser.ID,
+			UserName:  mstUser.UserName,
+			FirstName: mstUser.FirstName,
+			LastName:  mstUser.LastName,
 		},
 		Description: tournament.Description,
 		StartDate:   tournament.StartDate,

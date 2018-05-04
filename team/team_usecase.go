@@ -50,9 +50,10 @@ func (u *usecase) Index(userID uint) (IndexResponse, error) {
 		respTeamData := RespTeam{
 			ID: team.ID,
 			Master: RespMaster{
-				ID:       mstUser.ID,
-				UserName: mstUser.UserName,
-				FullName: mstUser.FullName,
+				ID:        mstUser.ID,
+				UserName:  mstUser.UserName,
+				FirstName: mstUser.FirstName,
+				LastName:  mstUser.LastName,
 			},
 			Description: team.Description,
 			Name:        team.Name,
@@ -76,9 +77,10 @@ func (u *usecase) Index(userID uint) (IndexResponse, error) {
 		respTeamData := RespTeam{
 			ID: team.ID,
 			Master: RespMaster{
-				ID:       mstUser.ID,
-				UserName: mstUser.UserName,
-				FullName: mstUser.FullName,
+				ID:        mstUser.ID,
+				UserName:  mstUser.UserName,
+				FirstName: mstUser.FirstName,
+				LastName:  mstUser.LastName,
 			},
 			Description: team.Description,
 			Name:        team.Name,
@@ -142,9 +144,10 @@ func (u *usecase) Show(teamID uint) (RespTeam, error) {
 	respTeamData := RespTeam{
 		ID: team.ID,
 		Master: RespMaster{
-			ID:       mstUser.ID,
-			UserName: mstUser.UserName,
-			FullName: mstUser.FullName,
+			ID:        mstUser.ID,
+			UserName:  mstUser.UserName,
+			FirstName: mstUser.FirstName,
+			LastName:  mstUser.LastName,
 		},
 		Description: team.Description,
 		Name:        team.Name,

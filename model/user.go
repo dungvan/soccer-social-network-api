@@ -10,12 +10,17 @@ import (
 // User model
 type User struct {
 	*gorm.Model
-	UserName string
-	Email    string
-	Password string
-	FullName string
-	Birthday time.Time
-	Score    uint
+	UserName  string
+	Email     string
+	Password  string
+	FirstName string
+	LastName  string
+	Birthday  time.Time
+	City      string
+	Country   string
+	About     string
+	Quote     string
+	Score     uint
 }
 
 // HashAndSaltPassword encrypt password

@@ -114,8 +114,7 @@ func (h *handler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response := LoginResponse{Token: token}
-	h.ResponseJSON(w, response)
+	h.ResponseJSON(w, token)
 }
 
 func (h *handler) Show(w http.ResponseWriter, r *http.Request) {

@@ -20,7 +20,8 @@ type RespTournament struct {
 
 // RespMaster struct
 type RespMaster struct {
-	ID       uint   `json:"id"`
-	UserName string `json:"user_name"`
-	FullName string `json:"full_name"`
+	ID        uint   `json:"id"`
+	UserName  string `json:"user_name"`
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
 }

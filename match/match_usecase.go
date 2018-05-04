@@ -62,9 +62,10 @@ func (u *usecase) Show(matchID uint) (RespMatch, error) {
 	respMatchData := RespMatch{
 		ID: match.ID,
 		Master: RespMaster{
-			ID:       mstUser.ID,
-			UserName: mstUser.UserName,
-			FullName: mstUser.FullName,
+			ID:        mstUser.ID,
+			UserName:  mstUser.UserName,
+			FirstName: mstUser.FirstName,
+			LastName:  mstUser.LastName,
 		},
 		Description: match.Description,
 		StartDate:   match.StartDate,
