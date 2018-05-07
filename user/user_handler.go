@@ -21,6 +21,7 @@ type HTTPHandler interface {
 	Login(w http.ResponseWriter, r *http.Request)
 	Show(w http.ResponseWriter, r *http.Request)
 	FriendRequest(w http.ResponseWriter, r *http.Request)
+	Index(w http.ResponseWriter, r *http.Request)
 }
 
 // handler struct
@@ -115,6 +116,35 @@ func (h *handler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.ResponseJSON(w, token)
+}
+
+func (h *handler) Index(w http.ResponseWriter, r *http.Request) {
+	request := &IndexRequest{}
+	h.ParseForm(r, request)
+	// validate get data.
+	if err := h.Validate(w, request); err != nil {
+		return
+	}
+
+	response, err := h.usecase.Index(request.Page)
+	if err != nil {
+		h.Logger.WithFields(logrus.Fields{
+			"error": err,
+		}).Error("usecase.Index() error")
+		if response.TypeOfStatusCode == http.StatusBadRequest {
+			common := utils.CommonResponse{Message: "Bad request error", Errors: []string{err.Error()}}
+			h.StatusBadRequest(w, common)
+			return
+		}
+		if response.TypeOfStatusCode == http.StatusNotFound {
+			h.StatusNotFoundRequest(w, nil)
+			return
+		}
+		common := utils.CommonResponse{Message: "Internal server error", Errors: []string{}}
+		h.StatusServerError(w, common)
+		return
+	}
+	h.ResponseJSON(w, response)
 }
 
 func (h *handler) Show(w http.ResponseWriter, r *http.Request) {

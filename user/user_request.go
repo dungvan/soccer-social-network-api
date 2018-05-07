@@ -21,3 +21,8 @@ type FriendRequest struct {
 	UserID     uint `json:"user_id" validate:"required"`
 	UserFollow uint `json:"user_follow" validate:"required"`
 }
+
+// IndexRequest struct
+type IndexRequest struct {
+	Page uint `form:"page" validate:"omitempty,min=1"`
+}

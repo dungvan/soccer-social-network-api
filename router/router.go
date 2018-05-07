@@ -67,6 +67,9 @@ func (r *Router) SetupHandler() {
 		cr.Post("/register", uh.Register)
 		cr.Post("/login", uh.Login)
 		cr.Get("/{user_name}", uh.Show)
+		cr.With(mMiddleware.JwtAuth(r.LoggerHandler, r.SQLHandler.DB)).
+			With(mMiddleware.CheckSuperAdmin(r.LoggerHandler)).
+			Get("/", uh.Index)
 	})
 
 	r.Mux.Route("/posts", func(cr chi.Router) {

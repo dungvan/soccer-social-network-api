@@ -15,11 +15,12 @@ type User struct {
 	Password  string
 	FirstName string
 	LastName  string
-	Birthday  time.Time
+	Birthday  *time.Time
 	City      string
 	Country   string
 	About     string
 	Quote     string
+	Role      *string
 	Score     uint
 }
 

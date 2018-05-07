@@ -9,6 +9,13 @@ type LoginResponse struct {
 	Token    string `json:"token"`
 }
 
+// IndexResponse struct
+type IndexResponse struct {
+	TypeOfStatusCode int        `json:"-"`
+	Total            uint       `json:"total"`
+	Users            []RespUser `json:"users"`
+}
+
 // RespUser struct
 type RespUser struct {
 	TypeOfStatusCode int        `json:"-"`
@@ -22,4 +29,5 @@ type RespUser struct {
 	Quote            string     `json:"quote"`
 	City             string     `json:"city"`
 	Country          string     `json:"country"`
+	Role             string     `json:"role"`
 }

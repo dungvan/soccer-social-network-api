@@ -35,6 +35,7 @@ CREATE TABLE "users"
 	about VARCHAR(500),
 	quote VARCHAR(256),
 	birthday DATE DEFAULT NULL,
+	role VARCHAR(50) DEFAULT 'user',
 	score int DEFAULT 0,
 	created_at timestamp,
 	updated_at timestamp,

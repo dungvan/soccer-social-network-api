@@ -8,6 +8,7 @@ const (
 	emailKey                  = "users_email_key"
 	userName                  = "user_name"
 	email                     = "email"
+	pagingLimit               = 10
 )
 
 var (

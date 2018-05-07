@@ -25,6 +25,8 @@ type Repository interface {
 	CreateUserFollow(userFollow *model.UserFollow) error
 	// DeleteUserFollow
 	DeleteUserFollow(userFollowID uint) error
+	// GetAllUser
+	GetAllUser(page uint) (total uint, users []model.User, err error)
 }
 
 type repository struct {
@@ -69,6 +71,22 @@ func (r *repository) CreateUserFollow(userFollow *model.UserFollow) error {
 
 func (r *repository) DeleteUserFollow(userFollowID uint) error {
 	return nil
+}
+
+func (r *repository) GetAllUser(page uint) (uint, []model.User, error) {
+	var total uint
+	var err error
+	users := make([]model.User, 0)
+	result := r.db.Model(&model.User{}).
+		Select("id, user_name, email, role")
+	result.Count(&total)
+	if total <= pagingLimit*(page-1) {
+		return total, users, gorm.ErrRecordNotFound
+	}
+	err = result.Offset(pagingLimit * (page - 1)).
+		Limit(pagingLimit).Order("id asc").
+		Scan(&users).Error
+	return total, users, utils.ErrorsWrap(err, "can't get all user")
 }
 
 // NewRepository responses new Repository instance.
