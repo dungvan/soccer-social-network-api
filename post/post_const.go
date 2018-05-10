@@ -12,5 +12,6 @@ const (
 	// Default up a star count
 	upUnit = 1
 	// Default down a star count
-	downUnit = -1
+	downUnit    = -1
+	pagingLimit = 10
 )

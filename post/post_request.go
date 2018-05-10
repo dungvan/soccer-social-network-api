@@ -4,6 +4,11 @@ import (
 	"mime/multipart"
 )
 
+// IndexRequest struct
+type IndexRequest struct {
+	Page uint `form:"page" validate:"omitempty,min=1"`
+}
+
 // CreateRequest struct
 type CreateRequest struct {
 	Caption  string   `json:"caption" validate:"required_if=Images|required_if=Videos"`

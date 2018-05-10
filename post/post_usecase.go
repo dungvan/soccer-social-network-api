@@ -16,6 +16,8 @@ import (
 type Usecase interface {
 	// Index usecase
 	Index(userID uint) (IndexResponse, error)
+	// GetByUserID usecase
+	GetByUserID(userID uint) (IndexResponse, error)
 	// Create a post
 	Create(CreateRequest) (postID uint, err error)
 	// Show a post
@@ -36,7 +38,36 @@ type usecase struct {
 	repository Repository
 }
 
-func (u *usecase) Index(userID uint) (IndexResponse, error) {
+func (u *usecase) Index(page uint) (IndexResponse, error) {
+	if page < 1 {
+		page = 1
+	}
+	total, posts, err := u.repository.GetAllPost(page)
+	if err == gorm.ErrRecordNotFound {
+		return IndexResponse{TypeOfStatusCode: http.StatusNotFound}, utils.ErrorsNew("No posts has been found")
+	}
+	if err != nil {
+		return IndexResponse{Total: total, Posts: []RespPost{}}, utils.ErrorsWrap(err, "repository.GetAllPost() error")
+	}
+	response := IndexResponse{
+		Total: total,
+		Posts: func() []RespPost {
+			respUsers := make([]RespPost, 0)
+			for _, post := range posts {
+				respUsers = append(respUsers, RespPost{
+					ID:        post.ID,
+					UserID:    post.UserID,
+					Caption:   post.Caption,
+					CreatedAt: post.CreatedAt,
+				})
+			}
+			return respUsers
+		}(),
+	}
+	return response, err
+}
+
+func (u *usecase) GetByUserID(userID uint) (IndexResponse, error) {
 	indexResp := IndexResponse{}
 	result, err := u.repository.GetAllPostsByUserID(userID)
 	if err != nil {
@@ -76,7 +107,7 @@ func (u *usecase) Index(userID uint) (IndexResponse, error) {
 		}
 		indexResp.Posts = append(indexResp.Posts, data)
 	}
-	indexResp.ResultCount = len(result)
+	indexResp.Total = uint(len(result))
 	return indexResp, err
 }
 

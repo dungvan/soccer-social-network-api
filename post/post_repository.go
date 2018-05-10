@@ -16,6 +16,8 @@ import (
 
 // Repository interface
 type Repository interface {
+	// GetAllPost return all post with pagination
+	GetAllPost(page uint) (total uint, posts []model.Post, err error)
 	// GetAllPostsByUserID return all of post record
 	GetAllPostsByUserID(userID uint) ([]model.Post, error)
 	// CreatePost registers record to table post
@@ -53,10 +55,26 @@ type repository struct {
 	s3    infrastructure.NewS3RequestFunc
 }
 
+func (r *repository) GetAllPost(page uint) (uint, []model.Post, error) {
+	var total uint
+	var err error
+	posts := make([]model.Post, 0)
+	result := r.db.Model(&model.Post{}).
+		Select("id, user_id, caption, created_at")
+	result.Count(&total)
+	if total <= pagingLimit*(page-1) {
+		return total, posts, gorm.ErrRecordNotFound
+	}
+	err = result.Offset(pagingLimit * (page - 1)).
+		Limit(pagingLimit).Order("id asc").
+		Scan(&posts).Error
+	return total, posts, utils.ErrorsWrap(err, "can't get all posts")
+}
+
 func (r *repository) GetAllPostsByUserID(userID uint) ([]model.Post, error) {
 	posts := make([]model.Post, 0)
 	err := r.db.Model(&model.Post{}).
-		Select("id, caption, created_at").Where("user_id = ?", userID).
+		Select("id, user_id, caption, created_at").Where("user_id = ?", userID).
 		Limit(100).
 		Order("created_at desc, id desc").
 		Scan(&posts).Error

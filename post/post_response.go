@@ -11,8 +11,9 @@ type CreateResponse struct {
 
 // IndexResponse struct
 type IndexResponse struct {
-	ResultCount int        `json:"result_count"`
-	Posts       []RespPost `json:"posts"`
+	TypeOfStatusCode int        `json:"-"`
+	Total            uint       `json:"total"`
+	Posts            []RespPost `json:"posts"`
 }
 
 // RespPost struct
