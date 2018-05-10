@@ -1,5 +1,7 @@
 package user
 
+import "time"
+
 // RegisterReuqest struct
 type RegisterReuqest struct {
 	UserName             string `json:"user_name" validate:"required,lt=49"`
@@ -25,4 +27,22 @@ type FriendRequest struct {
 // IndexRequest struct
 type IndexRequest struct {
 	Page uint `form:"page" validate:"omitempty,min=1"`
+}
+
+// UpdateRequest struct
+type UpdateRequest struct {
+	updateField
+	Password             string `json:"password" validate:"omitempty,gt=5"`
+	PasswordConfirmation string `json:"password_confirmation" validate:"eqfield=Password"`
+}
+
+type updateField struct {
+	ID        uint       `json:"id" validate:"required"`
+	FirstName string     `json:"first_name" validate:"gt=0"`
+	LastName  string     `json:"last_name" validate:"gt=0"`
+	City      string     `json:"city"`
+	Country   string     `json:"country"`
+	About     string     `json:"About"`
+	Quote     string     `json:"quote"`
+	Birthday  *time.Time `json:"birthday"`
 }

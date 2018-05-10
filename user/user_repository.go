@@ -13,6 +13,8 @@ import (
 type Repository interface {
 	// Create repo
 	CreateUser(model.User) error
+	// FindUserByID
+	FindUserByID(ID uint) (*model.User, error)
 	// FindUserByUserName
 	FindUserByUserName(userName string) (*model.User, error)
 	// FindUserByEmail
@@ -27,6 +29,10 @@ type Repository interface {
 	DeleteUserFollow(userFollowID uint) error
 	// GetAllUser
 	GetAllUser(page uint) (total uint, users []model.User, err error)
+	// Delete user
+	DeleteUser(userID uint) error
+	// Update User
+	UpdateUser(user *model.User) error
 }
 
 type repository struct {
@@ -37,6 +43,15 @@ type repository struct {
 
 func (r *repository) CreateUser(u model.User) error {
 	return r.db.Create(&u).Error
+}
+
+func (r *repository) FindUserByID(ID uint) (*model.User, error) {
+	user := &model.User{}
+	err := r.db.Where("id = ?", ID).First(user).Error
+	if err == gorm.ErrRecordNotFound {
+		return user, err
+	}
+	return user, utils.ErrorsWrap(err, "can't find user")
 }
 
 func (r *repository) FindUserByUserName(userName string) (*model.User, error) {
@@ -87,6 +102,14 @@ func (r *repository) GetAllUser(page uint) (uint, []model.User, error) {
 		Limit(pagingLimit).Order("id asc").
 		Scan(&users).Error
 	return total, users, utils.ErrorsWrap(err, "can't get all user")
+}
+
+func (r *repository) DeleteUser(userID uint) error {
+	return r.db.Where("id = ?", userID).Delete(&model.User{}).Error
+}
+
+func (r *repository) UpdateUser(user *model.User) error {
+	return r.db.Model(&model.User{}).Update(user).Error
 }
 
 // NewRepository responses new Repository instance.

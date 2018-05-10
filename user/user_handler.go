@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/dungvan2512/soccer-social-network/shared/auth"
@@ -22,6 +23,8 @@ type HTTPHandler interface {
 	Show(w http.ResponseWriter, r *http.Request)
 	FriendRequest(w http.ResponseWriter, r *http.Request)
 	Index(w http.ResponseWriter, r *http.Request)
+	Delete(w http.ResponseWriter, r *http.Request)
+	Update(w http.ResponseWriter, r *http.Request)
 }
 
 // handler struct
@@ -168,6 +171,54 @@ func (h *handler) Show(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	h.ResponseJSON(w, response)
+}
+
+func (h *handler) Delete(w http.ResponseWriter, r *http.Request) {
+	id, _ := strconv.Atoi(chi.URLParam(r, "id"))
+	if err := h.usecase.Delete(uint(id)); err != nil {
+		common := utils.CommonResponse{Message: "Delete failed", Errors: []string{err.Error()}}
+		h.StatusServerError(w, common)
+		return
+	}
+
+	common := utils.CommonResponse{Message: "Delete success"}
+	h.ResponseJSON(w, common)
+}
+
+func (h *handler) Update(w http.ResponseWriter, r *http.Request) {
+	request := &UpdateRequest{}
+	messages, err := h.ParseJSON(r, request)
+	if len(messages) != 0 {
+		common := utils.CommonResponse{Message: "validation error.", Errors: messages}
+		h.StatusBadRequest(w, common)
+		return
+	}
+	if err != nil {
+		common := utils.CommonResponse{Message: "internal server error.", Errors: nil}
+		h.StatusServerError(w, common)
+		return
+	}
+
+	// validate get data.
+	if err = h.Validate(w, request); err != nil {
+		return
+	}
+
+	curUser := auth.GetUserFromContext(r.Context())
+	if curUser.ID != request.ID && curUser.Role != "s_admin" {
+		common := utils.CommonResponse{Message: "Update failed", Errors: []string{"Forbidden to update this user"}}
+		h.StatusBadRequest(w, common)
+		return
+	}
+
+	user, err := h.usecase.Update(*request)
+	if err != nil {
+		common := utils.CommonResponse{Message: "Update failed", Errors: []string{"Forbidden to update this user"}}
+		h.StatusBadRequest(w, common)
+		return
+	}
+
+	h.ResponseJSON(w, user)
 }
 
 // FriendRequest is user request connection to other

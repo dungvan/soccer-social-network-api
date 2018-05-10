@@ -20,7 +20,7 @@ type User struct {
 	Country   string
 	About     string
 	Quote     string
-	Role      *string
+	Role      string `gorm:"default:'user'"`
 	Score     uint
 }
 

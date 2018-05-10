@@ -6,6 +6,7 @@ import "time"
 type LoginResponse struct {
 	ID       uint   `json:"id"`
 	UserName string `json:"user_name"`
+	Role     string `json:"role"`
 	Token    string `json:"token"`
 }
 

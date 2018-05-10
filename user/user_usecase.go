@@ -22,6 +22,10 @@ type Usecase interface {
 	Show(userName string) (RespUser, error)
 	// Index get all user  by super admin
 	Index(page uint) (IndexResponse, error)
+	// Delete a user
+	Delete(id uint) error
+	// Update a user
+	Update(UpdateRequest) (RespUser, error)
 }
 
 type usecase struct {
@@ -63,7 +67,7 @@ func (u *usecase) Login(l LoginRequest) (LoginResponse, error) {
 	} else {
 		return LoginResponse{}, errUserNameOrPassword
 	}
-	return LoginResponse{ID: user.ID, UserName: user.UserName, Token: token}, nil
+	return LoginResponse{ID: user.ID, UserName: user.UserName, Role: user.Role, Token: token}, nil
 }
 
 func (u *usecase) SendFriendRequest(FriendRequest) error {
@@ -88,7 +92,7 @@ func (u *usecase) Show(userName string) (RespUser, error) {
 		Country:   user.Country,
 		About:     user.About,
 		Quote:     user.Quote,
-		Role:      *user.Role,
+		Role:      user.Role,
 	}
 
 	return respUserData, nil
@@ -120,13 +124,55 @@ func (u *usecase) Index(page uint) (IndexResponse, error) {
 					Country:   user.Country,
 					About:     user.About,
 					Quote:     user.Quote,
-					Role:      *user.Role,
+					Role:      user.Role,
 				})
 			}
 			return respUsers
 		}(),
 	}
 	return response, err
+}
+
+func (u *usecase) Update(r UpdateRequest) (RespUser, error) {
+	user, err := u.repository.FindUserByID(r.ID)
+	if err == gorm.ErrRecordNotFound {
+		return RespUser{}, utils.ErrorsNew("No Users has been found")
+	} else if err != nil {
+		return RespUser{}, utils.ErrorsWrap(err, "repository.GetAllUser() error")
+	}
+	user.FirstName = r.FirstName
+	user.LastName = r.LastName
+	user.City = r.City
+	user.Country = r.Country
+	user.About = r.About
+	user.Birthday = r.Birthday
+	user.Quote = r.Quote
+	if r.Password != "" {
+		user.Password = r.Password
+		*user = user.HashAndSaltPassword()
+	}
+	err = u.repository.UpdateUser(user)
+	if err != nil {
+		return RespUser{}, utils.ErrorsWrap(err, "repository.UpdateUser() error")
+	}
+	userResp := RespUser{
+		ID:        user.ID,
+		UserName:  user.UserName,
+		Email:     user.Email,
+		FirstName: user.FirstName,
+		LastName:  user.LastName,
+		Birthdate: user.Birthday,
+		City:      user.City,
+		Country:   user.Country,
+		About:     user.About,
+		Quote:     user.Quote,
+		Role:      user.Role,
+	}
+	return userResp, err
+}
+
+func (u *usecase) Delete(id uint) error {
+	return u.repository.DeleteUser(id)
 }
 
 // NewUsecase responses new Usecase instance.

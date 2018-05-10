@@ -64,7 +64,7 @@ func JwtAuth(logger *infrastructure.Logger, db *gorm.DB) func(http.Handler) http
 func CheckSuperAdmin(logger *infrastructure.Logger) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
-			role := *auth.GetUserFromContext(r.Context()).Role
+			role := auth.GetUserFromContext(r.Context()).Role
 			if role != "s_admin" {
 				logger.Log.WithFields(logrus.Fields{"error": errors.New("role of user is " + role)}).Info("user are not super admin")
 				utils.ResponseJSON(w, http.StatusUnauthorized, DefaultUnauthorizedResponse())
