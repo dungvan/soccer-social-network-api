@@ -129,7 +129,7 @@ func (h *HTTPHandler) Show(w http.ResponseWriter, r *http.Request) {
 func (h *HTTPHandler) UpStar(w http.ResponseWriter, r *http.Request) {
 	postID, err := strconv.Atoi(chi.URLParam(r, "id"))
 	request := StarCountRequest{}
-	request.PostID = uint(postID)
+	request.ID = uint(postID)
 	request.UserID = auth.GetUserFromContext(r.Context()).ID
 	response, err := h.usecase.CountUpStar(request)
 	if err != nil {
@@ -161,7 +161,7 @@ func (h *HTTPHandler) UpStar(w http.ResponseWriter, r *http.Request) {
 func (h *HTTPHandler) DeleteStar(w http.ResponseWriter, r *http.Request) {
 	postID, err := strconv.Atoi(chi.URLParam(r, "id"))
 	request := StarCountRequest{}
-	request.PostID = uint(postID)
+	request.ID = uint(postID)
 	request.UserID = auth.GetUserFromContext(r.Context()).ID
 	response, err := h.usecase.CountDownStar(request)
 	if err != nil {
@@ -182,6 +182,39 @@ func (h *HTTPHandler) DeleteStar(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	h.ResponseJSON(w, response)
+}
+
+// Update handler
+func (h *HTTPHandler) Update(w http.ResponseWriter, r *http.Request) {
+	postID, _ := strconv.Atoi(chi.URLParam(r, "id"))
+	request := &UpdateRequest{}
+	request.ID = uint(postID)
+	messages, err := h.ParseJSON(r, request)
+	if len(messages) != 0 {
+		common := utils.CommonResponse{Message: "validation error.", Errors: messages}
+		h.StatusBadRequest(w, common)
+		return
+	}
+	if err != nil {
+		common := utils.CommonResponse{Message: "internal server error.", Errors: nil}
+		h.StatusServerError(w, common)
+		return
+	}
+
+	// validate get data.
+	if err = h.Validate(w, request); err != nil {
+		return
+	}
+	curUser := auth.GetUserFromContext(r.Context())
+	post, err := h.usecase.Update(*request, curUser)
+
+	if err != nil {
+		common := utils.CommonResponse{Message: "Update failed", Errors: []string{err.Error()}}
+		h.StatusBadRequest(w, common)
+		return
+	}
+
+	h.ResponseJSON(w, post)
 }
 
 // Delete handler

@@ -23,7 +23,7 @@ type Usecase interface {
 	// Show a post
 	Show(postID uint) (RespPost, error)
 	// Update a post
-	Update(UpdateRequest) (uint, error)
+	Update(request UpdateRequest, ctxUser model.User) (RespPost, error)
 	// CountUpStar increase star
 	CountUpStar(StarCountRequest) (StarCountResponse, error)
 	// CountDownStar  decrease star
@@ -211,14 +211,10 @@ func (u *usecase) Show(postID uint) (RespPost, error) {
 	return response, nil
 }
 
-func (u *usecase) Update(r UpdateRequest) (uint, error) {
-	return 0, nil
-}
-
 func (u *usecase) CountUpStar(request StarCountRequest) (StarCountResponse, error) {
 	var post *model.Post
 	response := StarCountResponse{}
-	post, err := u.repository.FindPostByID(request.PostID)
+	post, err := u.repository.FindPostByID(request.ID)
 	if err == gorm.ErrRecordNotFound {
 		response.TypeOfStatusCode = http.StatusNotFound
 		return response, errors.New("the post does not exist")
@@ -227,21 +223,21 @@ func (u *usecase) CountUpStar(request StarCountRequest) (StarCountResponse, erro
 	}
 
 	tx := u.db.Begin()
-	postStar, err := u.repository.FindPostStar(request.UserID, request.PostID)
+	postStar, err := u.repository.FindPostStar(request.UserID, request.ID)
 	switch {
 	case err == nil && postStar.DeletedAt == nil:
 		response.TypeOfStatusCode = http.StatusBadRequest
 		tx.Rollback()
 		return response, errors.New("Can't tap star many time")
 	case err == gorm.ErrRecordNotFound:
-		_, err = u.repository.CreatePostStar(request.UserID, request.PostID, tx)
+		_, err = u.repository.CreatePostStar(request.UserID, request.ID, tx)
 		if err != nil {
 			tx.Rollback()
 			return response, utils.ErrorsWrap(err, "repository.CreatePostStar() error")
 		}
 		break
 	case postStar.DeletedAt != nil:
-		_, err = u.repository.RestorePostStar(request.UserID, request.PostID, tx)
+		_, err = u.repository.RestorePostStar(request.UserID, request.ID, tx)
 		if err != nil {
 			tx.Rollback()
 			return response, utils.ErrorsWrap(err, "repository.RestorePostStar() error")
@@ -256,7 +252,7 @@ func (u *usecase) CountUpStar(request StarCountRequest) (StarCountResponse, erro
 		tx.Rollback()
 		return response, utils.ErrorsWrap(err, "repository.FindPostStarCount() error")
 	}
-	starCount, err := u.repository.UpdatePostStarCount(upUnit, request.PostID, tx)
+	starCount, err := u.repository.UpdatePostStarCount(upUnit, request.ID, tx)
 	if err != nil {
 		tx.Rollback()
 		return response, utils.ErrorsWrap(err, "repository.UpdatePostStarCount() error")
@@ -269,7 +265,7 @@ func (u *usecase) CountUpStar(request StarCountRequest) (StarCountResponse, erro
 func (u *usecase) CountDownStar(request StarCountRequest) (StarCountResponse, error) {
 	var post *model.Post
 	response := StarCountResponse{}
-	post, err := u.repository.FindPostByID(request.PostID)
+	post, err := u.repository.FindPostByID(request.ID)
 	if err == gorm.ErrRecordNotFound {
 		response.TypeOfStatusCode = http.StatusNotFound
 		return response, errors.New("The outfit does not exist")
@@ -284,7 +280,7 @@ func (u *usecase) CountDownStar(request StarCountRequest) (StarCountResponse, er
 		return response, utils.ErrorsWrap(err, "repository.FindPostStarCount error")
 	}
 
-	postStar, err := u.repository.FindPostStar(request.UserID, request.PostID)
+	postStar, err := u.repository.FindPostStar(request.UserID, request.ID)
 	if err == gorm.ErrRecordNotFound || postStar.DeletedAt != nil {
 		response.TypeOfStatusCode = http.StatusBadRequest
 		return response, errors.New("User has not tapped or untapped the star before")
@@ -293,12 +289,12 @@ func (u *usecase) CountDownStar(request StarCountRequest) (StarCountResponse, er
 	}
 
 	tx := u.db.Begin()
-	starCount, err := u.repository.UpdatePostStarCount(downUnit, request.PostID, tx)
+	starCount, err := u.repository.UpdatePostStarCount(downUnit, request.ID, tx)
 	if err != nil {
 		tx.Rollback()
 		return response, utils.ErrorsWrap(err, "repository.UpdatePostStarCount error")
 	}
-	_, err = u.repository.DeletePostStar(request.UserID, request.PostID, tx)
+	_, err = u.repository.DeletePostStar(request.UserID, request.ID, tx)
 	if err != nil {
 		tx.Rollback()
 		return response, utils.ErrorsWrap(err, "repository.DeletePostStar error")
@@ -322,6 +318,30 @@ func (u *usecase) UploadImages(request UploadImagesRequest) (UploadImagesRespons
 	return response, nil
 }
 
+func (u *usecase) Update(r UpdateRequest, ctxUser model.User) (RespPost, error) {
+	var err error
+	post, err := u.repository.FindPostByID(r.ID)
+	if err != nil {
+		return RespPost{}, utils.ErrorsWrap(err, "repository.FindPostByID() error")
+	}
+	if ctxUser.Role != "s_admin" {
+		if post.UserID != ctxUser.ID {
+			return RespPost{}, utils.ErrorsNew("Forbbiden to update the post")
+		}
+	}
+	post.Caption = r.Caption
+	err = u.repository.UpdatePost(post)
+	if err != nil {
+		return RespPost{}, utils.ErrorsWrap(err, "repository.UpdatePost() error")
+	}
+	return RespPost{
+		ID:        post.ID,
+		UserID:    post.UserID,
+		Caption:   post.Caption,
+		CreatedAt: post.CreatedAt,
+	}, nil
+}
+
 func (u *usecase) Delete(postID uint, ctxUser model.User) error {
 	var err error
 	if ctxUser.Role != "s_admin" {
@@ -338,6 +358,7 @@ func (u *usecase) Delete(postID uint, ctxUser model.User) error {
 	defer func() {
 		if err != nil {
 			tx.Rollback()
+			return
 		}
 		tx.Commit()
 	}()

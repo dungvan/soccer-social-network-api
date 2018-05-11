@@ -135,9 +135,7 @@ func (u *usecase) Index(page uint) (IndexResponse, error) {
 
 func (u *usecase) Update(r UpdateRequest) (RespUser, error) {
 	user, err := u.repository.FindUserByID(r.ID)
-	if err == gorm.ErrRecordNotFound {
-		return RespUser{}, utils.ErrorsNew("No Users has been found")
-	} else if err != nil {
+	if err != nil {
 		return RespUser{}, utils.ErrorsWrap(err, "repository.GetAllUser() error")
 	}
 	user.FirstName = r.FirstName

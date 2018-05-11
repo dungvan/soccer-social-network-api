@@ -18,12 +18,14 @@ type Repository interface {
 	GetAllTeamsByMasterUserID(masterUserID uint) ([]model.Team, error)
 	GetAllTeamsByPlayerUserID(playerUserID uint) ([]model.Team, error)
 	CreateTeam(team *model.Team, transaction *gorm.DB) error
-	CreateTeamPlayer(teamPlayers []model.TeamPlayer, transaction *gorm.DB) error
+	CreateTeamPlayers(teamPlayers []model.TeamPlayer, transaction *gorm.DB) error
 	GetTeamMaster(teamID uint) (*model.User, error)
 	GetTeamPlayers(teamID uint) ([]Player, error)
+	UpdateTeam(team *model.Team, transaction *gorm.DB) error
 	DeleteTeam(teamID uint, transaction *gorm.DB) error
 	DeleteTeamMaster(teamID uint, transaction *gorm.DB) error
-	DeleteTeamPlayers(teamID uint, transaction *gorm.DB) error
+	DeleteTeamPlayers(teamsID []uint, transaction *gorm.DB) error
+	DeleteAllTeamPlayers(teamID uint, transaction *gorm.DB) error
 }
 
 type repository struct {
@@ -85,7 +87,7 @@ func (r *repository) CreateTeam(t *model.Team, tx *gorm.DB) error {
 	return utils.ErrorsWrap(result.Error, "can't create team")
 }
 
-func (r *repository) CreateTeamPlayer(teamPlayers []model.TeamPlayer, tx *gorm.DB) error {
+func (r *repository) CreateTeamPlayers(teamPlayers []model.TeamPlayer, tx *gorm.DB) error {
 	if len(teamPlayers) == 0 {
 		return nil
 	}
@@ -120,6 +122,10 @@ func (r *repository) GetTeamPlayers(teamID uint) ([]Player, error) {
 	return players, utils.ErrorsWrap(result.Error, "can't get team-players relation")
 }
 
+func (r *repository) UpdateTeam(team *model.Team, transaction *gorm.DB) error {
+	return utils.ErrorsWrap(transaction.Model(&model.Team{}).Update(team).Error, "can't update team")
+}
+
 func (r *repository) DeleteTeam(teamID uint, transaction *gorm.DB) error {
 	return utils.ErrorsWrap(transaction.Where("i = ?", teamID).Delete(&model.Team{}).Error, "can't delete team")
 }
@@ -128,8 +134,12 @@ func (r *repository) DeleteTeamMaster(teamID uint, transaction *gorm.DB) error {
 	return utils.ErrorsWrap(transaction.Where("owner_type = 'teams' AND owner_id = ?", teamID).Delete(&model.Master{}).Error, "can't delete related team-master")
 }
 
-func (r *repository) DeleteTeamPlayers(teamID uint, transaction *gorm.DB) error {
-	return utils.ErrorsWrap(transaction.Where("team_id = ?", teamID).Delete(&model.TeamPlayer{}).Error, "can't delete related team-players")
+func (r *repository) DeleteTeamPlayers(teamsID []uint, transaction *gorm.DB) error {
+	return utils.ErrorsWrap(transaction.Where("team_id = in", teamsID).Delete(&model.TeamPlayer{}).Error, "can't delete related team-players")
+}
+
+func (r *repository) DeleteAllTeamPlayers(teamID uint, transaction *gorm.DB) error {
+	return utils.ErrorsWrap(transaction.Where("team_id = ?", teamID).Delete(&model.TeamPlayer{}).Error, "can't delete all related team-players")
 }
 
 // NewRepository create new instance of Repository

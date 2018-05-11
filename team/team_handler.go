@@ -94,10 +94,35 @@ func (h *HTTPHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 // Update handler
 func (h *HTTPHandler) Update(w http.ResponseWriter, r *http.Request) {
-	// implement here
-	h.ResponseJSON(w, struct {
-		Message string `json:"message"`
-	}{"this is sample response"})
+	teamID, _ := strconv.Atoi(chi.URLParam(r, "id"))
+	request := &UpdateRequest{}
+	request.ID = uint(teamID)
+	messages, err := h.ParseJSON(r, request)
+	if len(messages) != 0 {
+		common := utils.CommonResponse{Message: "validation error.", Errors: messages}
+		h.StatusBadRequest(w, common)
+		return
+	}
+	if err != nil {
+		common := utils.CommonResponse{Message: "internal server error.", Errors: nil}
+		h.StatusServerError(w, common)
+		return
+	}
+
+	// validate get data.
+	if err = h.Validate(w, request); err != nil {
+		return
+	}
+	curUser := auth.GetUserFromContext(r.Context())
+	team, err := h.usecase.Update(*request, curUser)
+
+	if err != nil {
+		common := utils.CommonResponse{Message: "Update failed", Errors: []string{err.Error()}}
+		h.StatusBadRequest(w, common)
+		return
+	}
+
+	h.ResponseJSON(w, team)
 }
 
 // Show handler

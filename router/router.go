@@ -86,6 +86,7 @@ func (r *Router) SetupHandler() {
 		cr.Post("/images", ph.UploadImages)
 		cr.Route("/{id:0*([1-9])([0-9]?)+}", func(cr chi.Router) {
 			cr.Delete("/", ph.Delete)
+			cr.Put("/", ph.Update)
 			cr.Get("/", ph.Show)
 			cr.Post("/star", ph.UpStar)
 			cr.Delete("/star", ph.DeleteStar)
@@ -99,6 +100,7 @@ func (r *Router) SetupHandler() {
 		cr.Post("/", th.Create)
 		cr.Get("/{id:0*([1-9])([0-9]?)+}", th.Show)
 		cr.Delete("/{id:0*([1-9])([0-9]?)+}", th.Delete)
+		cr.Put("/{id:0*([1-9])([0-9]?)+}", th.Update)
 	})
 
 	r.Mux.Route("/matches", func(cr chi.Router) {

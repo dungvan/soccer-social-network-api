@@ -19,6 +19,8 @@ type Usecase interface {
 	Create(CreateRequest) (teamID uint, err error)
 	// Show a team
 	Show(teamID uint) (RespTeam, error)
+	// Update a team
+	Update(r UpdateRequest, ctxUser model.User) (RespTeam, error)
 	// Delete a team
 	Delete(teamID uint, ctxUser model.User) error
 }
@@ -163,7 +165,7 @@ func (u *usecase) Create(r CreateRequest) (uint, error) {
 		teamplayers = append(teamplayers, model.TeamPlayer{TeamID: team.ID, UserID: player.ID, Position: player.Position})
 	}
 
-	if err := u.repository.CreateTeamPlayer(teamplayers, tx); err != nil {
+	if err := u.repository.CreateTeamPlayers(teamplayers, tx); err != nil {
 		isError = true
 		return 0, utils.ErrorsWrap(err, "repository.CreateTeamPlayer() error")
 	}
@@ -202,6 +204,53 @@ func (u *usecase) Show(teamID uint) (RespTeam, error) {
 	return respTeamData, nil
 }
 
+func (u *usecase) Update(r UpdateRequest, ctxUser model.User) (RespTeam, error) {
+	var err error
+	if ctxUser.Role != "s_admin" {
+		master, err := u.repository.GetTeamMaster(r.ID)
+		if err != nil {
+			return RespTeam{}, utils.ErrorsWrap(err, "repository.GetTeamMaster() error")
+		}
+		if master.ID != ctxUser.ID {
+			return RespTeam{}, utils.ErrorsNew("Forbbiden to update the team")
+		}
+	}
+
+	team, err := u.repository.FindTeamByID(r.ID)
+	if err != nil {
+		return RespTeam{}, utils.ErrorsWrap(err, "repository.FindTeamByID() error")
+	}
+
+	tx := u.db.Begin()
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+			return
+		}
+		tx.Commit()
+	}()
+
+	err = u.repository.UpdateTeam(team, tx)
+	if err != nil {
+		return RespTeam{}, utils.ErrorsWrap(err, "repository.UpdateTeam() error")
+	}
+	err = u.repository.DeleteTeamPlayers(r.PlayersDel, tx)
+	if err != nil {
+		return RespTeam{}, utils.ErrorsWrap(err, "repository.UpdateTeam() error")
+	}
+
+	teamplayers := make([]model.TeamPlayer, 0)
+	for _, player := range r.PlayersAdd {
+		teamplayers = append(teamplayers, model.TeamPlayer{TeamID: team.ID, UserID: player.ID, Position: player.Position})
+	}
+	err = u.repository.CreateTeamPlayers(teamplayers, tx)
+	if err != nil {
+		return RespTeam{}, utils.ErrorsWrap(err, "repository.CreateTeamPlayers() error")
+	}
+
+	return u.Show(r.ID)
+}
+
 func (u *usecase) Delete(teamID uint, ctxUser model.User) error {
 	var err error
 	if ctxUser.Role != "s_admin" {
@@ -218,6 +267,7 @@ func (u *usecase) Delete(teamID uint, ctxUser model.User) error {
 	defer func() {
 		if err != nil {
 			tx.Rollback()
+			return
 		}
 		tx.Commit()
 	}()
@@ -230,9 +280,9 @@ func (u *usecase) Delete(teamID uint, ctxUser model.User) error {
 	if err != nil {
 		return utils.ErrorsWrap(err, "repository.DeleteTeamMaster() error")
 	}
-	err = u.repository.DeleteTeamPlayers(teamID, tx)
+	err = u.repository.DeleteAllTeamPlayers(teamID, tx)
 	if err != nil {
-		return utils.ErrorsWrap(err, "repository.DeleteTeamPlayers() error")
+		return utils.ErrorsWrap(err, "repository.DeleteAllTeamPlayers() error")
 	}
 	return nil
 }

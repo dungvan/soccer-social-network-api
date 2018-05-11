@@ -31,13 +31,13 @@ type UploadVideosRequest struct {
 
 // UpdateRequest struct
 type UpdateRequest struct {
-	PostID  uint   `validate:"required"`
+	ID      uint   `validate:"required"`
 	Caption string `validate:"retuired"`
 }
 
 // StarCountRequest struct.
 type StarCountRequest struct {
-	PostID uint `validate:"required"`
+	ID     uint `validate:"required"`
 	UserID uint `validate:"required"`
 }
 

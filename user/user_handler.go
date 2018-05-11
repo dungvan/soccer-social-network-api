@@ -213,7 +213,7 @@ func (h *handler) Update(w http.ResponseWriter, r *http.Request) {
 
 	user, err := h.usecase.Update(*request)
 	if err != nil {
-		common := utils.CommonResponse{Message: "Update failed", Errors: []string{"Forbidden to update this user"}}
+		common := utils.CommonResponse{Message: "Update failed", Errors: []string{err.Error()}}
 		h.StatusBadRequest(w, common)
 		return
 	}
