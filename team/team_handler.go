@@ -20,8 +20,34 @@ type HTTPHandler struct {
 
 // Index handler
 func (h *HTTPHandler) Index(w http.ResponseWriter, r *http.Request) {
+	request := &IndexRequest{}
+	h.ParseForm(r, request)
+	// validate get data.
+	if err := h.Validate(w, request); err != nil {
+		return
+	}
+
+	response, err := h.usecase.Index(request.Page)
+	if err != nil {
+		h.Logger.WithFields(logrus.Fields{
+			"error": err,
+		}).Error("usecase.Index() error")
+		if response.TypeOfStatusCode == http.StatusBadRequest {
+			common := utils.CommonResponse{Message: "Bad request error", Errors: []string{err.Error()}}
+			h.StatusBadRequest(w, common)
+			return
+		}
+		common := utils.CommonResponse{Message: "Internal server error", Errors: []string{}}
+		h.StatusServerError(w, common)
+		return
+	}
+	h.ResponseJSON(w, response)
+}
+
+// GetByUser handler
+func (h *HTTPHandler) GetByUser(w http.ResponseWriter, r *http.Request) {
 	userID := auth.GetUserFromContext(r.Context()).ID
-	resp, err := h.usecase.Index(userID)
+	resp, err := h.usecase.GetByUser(userID)
 	if err != nil {
 		h.Logger.WithFields(logrus.Fields{
 			"error": err,
@@ -101,10 +127,16 @@ func (h *HTTPHandler) Show(w http.ResponseWriter, r *http.Request) {
 
 // Delete handler
 func (h *HTTPHandler) Delete(w http.ResponseWriter, r *http.Request) {
-	// implement here
-	h.ResponseJSON(w, struct {
-		Message string `json:"message"`
-	}{"this is sample response"})
+	id, _ := strconv.Atoi(chi.URLParam(r, "id"))
+	curUser := auth.GetUserFromContext(r.Context())
+	if err := h.usecase.Delete(uint(id), curUser); err != nil {
+		common := utils.CommonResponse{Message: "Delete failed", Errors: []string{err.Error()}}
+		h.StatusServerError(w, common)
+		return
+	}
+
+	common := utils.CommonResponse{Message: "Delete success"}
+	h.ResponseJSON(w, common)
 }
 
 // NewHTTPHandler return new HTTPHandler instance.

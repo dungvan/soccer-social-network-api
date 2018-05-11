@@ -98,7 +98,7 @@ func (h *HTTPHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 // Show a post Handler
 func (h *HTTPHandler) Show(w http.ResponseWriter, r *http.Request) {
-	postID, err := strconv.Atoi(chi.URLParam(r, "post_id"))
+	postID, err := strconv.Atoi(chi.URLParam(r, "id"))
 	response, err := h.usecase.Show(uint(postID))
 	if err != nil {
 		h.Logger.WithFields(logrus.Fields{
@@ -127,7 +127,7 @@ func (h *HTTPHandler) Show(w http.ResponseWriter, r *http.Request) {
 // "Second": to register to PostStarHistory Outfit ID and User ID.
 // "Finally": returns latest number of stars about specified outfit to the app.
 func (h *HTTPHandler) UpStar(w http.ResponseWriter, r *http.Request) {
-	postID, err := strconv.Atoi(chi.URLParam(r, "post_id"))
+	postID, err := strconv.Atoi(chi.URLParam(r, "id"))
 	request := StarCountRequest{}
 	request.PostID = uint(postID)
 	request.UserID = auth.GetUserFromContext(r.Context()).ID
@@ -159,7 +159,7 @@ func (h *HTTPHandler) UpStar(w http.ResponseWriter, r *http.Request) {
 // "Second": rewrites record of table “outfit_star_count” with key column "id_outfit".
 // "Finally": returns latest number of stars about specified outfit.
 func (h *HTTPHandler) DeleteStar(w http.ResponseWriter, r *http.Request) {
-	postID, err := strconv.Atoi(chi.URLParam(r, "post_id"))
+	postID, err := strconv.Atoi(chi.URLParam(r, "id"))
 	request := StarCountRequest{}
 	request.PostID = uint(postID)
 	request.UserID = auth.GetUserFromContext(r.Context()).ID
@@ -182,6 +182,20 @@ func (h *HTTPHandler) DeleteStar(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	h.ResponseJSON(w, response)
+}
+
+// Delete handler
+func (h *HTTPHandler) Delete(w http.ResponseWriter, r *http.Request) {
+	id, _ := strconv.Atoi(chi.URLParam(r, "id"))
+	curUser := auth.GetUserFromContext(r.Context())
+	if err := h.usecase.Delete(uint(id), curUser); err != nil {
+		common := utils.CommonResponse{Message: "Delete failed", Errors: []string{err.Error()}}
+		h.StatusServerError(w, common)
+		return
+	}
+
+	common := utils.CommonResponse{Message: "Delete success"}
+	h.ResponseJSON(w, common)
 }
 
 // UploadImages fot a post

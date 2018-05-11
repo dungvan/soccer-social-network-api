@@ -5,16 +5,17 @@ type CreateResponse struct {
 	TeamID uint `json:"team_id"`
 }
 
-// IndexResponse struct
-type IndexResponse struct {
-	Master RespTeams `json:"master"`
-	Player RespTeams `json:"player"`
+// ByUserResponse struct
+type ByUserResponse struct {
+	Master IndexResponse `json:"master"`
+	Player IndexResponse `json:"player"`
 }
 
-// RespTeams struct
-type RespTeams struct {
-	ResultCount int        `json:"result_count"`
-	Teams       []RespTeam `json:"teams"`
+// IndexResponse struct
+type IndexResponse struct {
+	TypeOfStatusCode int        `json:"-"`
+	Total            uint       `json:"total"`
+	Teams            []RespTeam `json:"teams"`
 }
 
 // RespTeam struct

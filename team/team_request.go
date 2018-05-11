@@ -1,5 +1,10 @@
 package team
 
+// IndexRequest struct
+type IndexRequest struct {
+	Page uint `form:"page" validate:"omitempty,min=1"`
+}
+
 // CreateRequest struct
 type CreateRequest struct {
 	UserID      uint            `validate:"required"`

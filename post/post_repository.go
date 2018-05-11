@@ -46,6 +46,10 @@ type Repository interface {
 	AddImageToS3(image Image, s3Path string) error
 	// GetRelatedPostImages get images of a post
 	GetRelatedPostImages(post *model.Post) error
+	// DeletePost
+	DeletePost(postID uint, transaction *gorm.DB) error
+	// DeleteRelatePostImages
+	DeleteRelatedPostImages(postID uint, transaction *gorm.DB) error
 }
 
 type repository struct {
@@ -217,6 +221,14 @@ func (r *repository) GetRelatedPostImages(post *model.Post) error {
 	post.Images = make([]model.Image, 0)
 	result := r.db.Model(post).Related(&post.Images)
 	return utils.ErrorsWrap(result.Error, "can't get posts-images relation")
+}
+
+func (r *repository) DeletePost(postID uint, transaction *gorm.DB) error {
+	return utils.ErrorsWrap(r.db.Where("id = ?", postID).Delete(&model.Post{}).Error, "can't Delete post")
+}
+
+func (r *repository) DeleteRelatedPostImages(postID uint, transaction *gorm.DB) error {
+	return utils.ErrorsWrap(r.db.Where("post_id = ?", postID).Delete(&model.Image{}).Error, "can't Delete related post-images")
 }
 
 // NewRepository create new instance of Repository

@@ -12,11 +12,15 @@ import (
 // Usecase interface
 type Usecase interface {
 	// Index usecase
-	Index(userID uint) (IndexResponse, error)
+	Index(page uint) (IndexResponse, error)
+	// GetByUser usecase
+	GetByUser(userID uint) (ByUserResponse, error)
 	// Create a team
 	Create(CreateRequest) (teamID uint, err error)
 	// Show a team
 	Show(teamID uint) (RespTeam, error)
+	// Delete a team
+	Delete(teamID uint, ctxUser model.User) error
 }
 
 type usecase struct {
@@ -25,12 +29,53 @@ type usecase struct {
 	repository Repository
 }
 
-func (u *usecase) Index(userID uint) (IndexResponse, error) {
-	response := IndexResponse{
-		Master: RespTeams{
+func (u *usecase) Index(page uint) (IndexResponse, error) {
+	response := IndexResponse{}
+	if page < 1 {
+		page = 1
+	}
+	total, teams, err := u.repository.GetAllTeam(page)
+	if err == gorm.ErrRecordNotFound {
+		return IndexResponse{Teams: []RespTeam{}}, nil
+	}
+	if err != nil {
+		return IndexResponse{Total: total, Teams: []RespTeam{}}, utils.ErrorsWrap(err, "repository.GetAllTeam() error")
+	}
+
+	for _, team := range teams {
+		mstUser, err := u.repository.GetTeamMaster(team.ID)
+		if err != nil {
+			return response, utils.ErrorsWrap(err, "repositiory.GetTeamMaster() error")
+		}
+		pls, err := u.repository.GetTeamPlayers(team.ID)
+		if err != nil {
+			return response, utils.ErrorsWrap(err, "repositiory.GetRelatedTeamPlayers() error")
+		}
+		respTeamData := RespTeam{
+			ID: team.ID,
+			Master: RespMaster{
+				ID:        mstUser.ID,
+				UserName:  mstUser.UserName,
+				FirstName: mstUser.FirstName,
+				LastName:  mstUser.LastName,
+			},
+			Description: team.Description,
+			Name:        team.Name,
+			Players:     pls,
+		}
+		response.Teams = append(response.Teams, respTeamData)
+	}
+
+	response.Total = total
+	return response, nil
+}
+
+func (u *usecase) GetByUser(userID uint) (ByUserResponse, error) {
+	response := ByUserResponse{
+		Master: IndexResponse{
 			Teams: []RespTeam{},
 		},
-		Player: RespTeams{
+		Player: IndexResponse{
 			Teams: []RespTeam{},
 		},
 	}
@@ -88,8 +133,8 @@ func (u *usecase) Index(userID uint) (IndexResponse, error) {
 		}
 		response.Player.Teams = append(response.Player.Teams, respTeamData)
 	}
-	response.Master.ResultCount = len(master)
-	response.Player.ResultCount = len(players)
+	response.Master.Total = uint(len(master))
+	response.Player.Total = uint(len(players))
 	return response, nil
 }
 
@@ -155,6 +200,41 @@ func (u *usecase) Show(teamID uint) (RespTeam, error) {
 	}
 
 	return respTeamData, nil
+}
+
+func (u *usecase) Delete(teamID uint, ctxUser model.User) error {
+	var err error
+	if ctxUser.Role != "s_admin" {
+		master, err := u.repository.GetTeamMaster(teamID)
+		if err != nil {
+			return utils.ErrorsWrap(err, "repository.FindPostByID() error")
+		}
+		if master.ID != ctxUser.ID {
+			return utils.ErrorsNew("Forbbiden to delete the post")
+		}
+	}
+
+	tx := u.db.Begin()
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		}
+		tx.Commit()
+	}()
+
+	err = u.repository.DeleteTeam(teamID, tx)
+	if err != nil {
+		return utils.ErrorsWrap(err, "repository.DeleteTeam() error")
+	}
+	err = u.repository.DeleteTeamMaster(teamID, tx)
+	if err != nil {
+		return utils.ErrorsWrap(err, "repository.DeleteTeamMaster() error")
+	}
+	err = u.repository.DeleteTeamPlayers(teamID, tx)
+	if err != nil {
+		return utils.ErrorsWrap(err, "repository.DeleteTeamPlayers() error")
+	}
+	return nil
 }
 
 // NewUsecase creare new instance of Usecase

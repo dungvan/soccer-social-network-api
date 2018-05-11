@@ -104,7 +104,7 @@ func (u *usecase) Index(page uint) (IndexResponse, error) {
 	}
 	total, users, err := u.repository.GetAllUser(page)
 	if err == gorm.ErrRecordNotFound {
-		return IndexResponse{TypeOfStatusCode: http.StatusNotFound}, utils.ErrorsNew("No Users has been found")
+		return IndexResponse{Users: []RespUser{}}, nil
 	} else if err != nil {
 		return IndexResponse{Total: total, Users: []RespUser{}}, utils.ErrorsWrap(err, "repository.GetAllUser() error")
 	}

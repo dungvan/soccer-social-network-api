@@ -28,6 +28,8 @@ type Usecase interface {
 	CountUpStar(StarCountRequest) (StarCountResponse, error)
 	// CountDownStar  decrease star
 	CountDownStar(StarCountRequest) (StarCountResponse, error)
+	// Delete a post
+	Delete(postID uint, ctxUser model.User) error
 	// Add images to s3
 	UploadImages(request UploadImagesRequest) (UploadImagesResponse, error)
 }
@@ -44,7 +46,7 @@ func (u *usecase) Index(page uint) (IndexResponse, error) {
 	}
 	total, posts, err := u.repository.GetAllPost(page)
 	if err == gorm.ErrRecordNotFound {
-		return IndexResponse{TypeOfStatusCode: http.StatusNotFound}, utils.ErrorsNew("No posts has been found")
+		return IndexResponse{Posts: []RespPost{}}, nil
 	}
 	if err != nil {
 		return IndexResponse{Total: total, Posts: []RespPost{}}, utils.ErrorsWrap(err, "repository.GetAllPost() error")
@@ -318,6 +320,37 @@ func (u *usecase) UploadImages(request UploadImagesRequest) (UploadImagesRespons
 		response.ImageNames = append(response.ImageNames, image.Name)
 	}
 	return response, nil
+}
+
+func (u *usecase) Delete(postID uint, ctxUser model.User) error {
+	var err error
+	if ctxUser.Role != "s_admin" {
+		post, err := u.repository.FindPostByID(postID)
+		if err != nil {
+			return utils.ErrorsWrap(err, "repository.FindPostByID() error")
+		}
+		if post.UserID != ctxUser.ID {
+			return utils.ErrorsNew("Forbbiden to delete the post")
+		}
+	}
+
+	tx := u.db.Begin()
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		}
+		tx.Commit()
+	}()
+
+	err = u.repository.DeletePost(postID, tx)
+	if err != nil {
+		return utils.ErrorsWrap(err, "repository.DeletePost() error")
+	}
+	err = u.repository.DeleteRelatedPostImages(postID, tx)
+	if err != nil {
+		return utils.ErrorsWrap(err, "repository.DeleteRelatePostImages() error")
+	}
+	return nil
 }
 
 // NewUsecase creare new instance of Usecase
