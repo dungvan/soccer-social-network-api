@@ -11,7 +11,7 @@ import (
 
 const (
 	// ConfigPath is config path directory.
-	ConfigPath = "$GOPATH/src/github.com/dungvan2512/soccer-social-network/config"
+	ConfigPath = "$GOPATH/src/github.com/dungvan2512/soccer-social-network-api/config"
 	// ConfigCommonFile is common config file prefix.
 	ConfigCommonFile = "app"
 )

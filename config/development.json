@@ -6,7 +6,7 @@
         "logger": {
             "_comment": "output can select 'output' value or 'file' value. 'output' value is stdout. you should must set 'file' key when file value output file.",
             "output": "output",
-            "file": "/var/log/soccer-social-network/soccer-social-network.log",
+            "file": "/var/log/soccer-social-network-api/soccer-social-network-api.log",
             "level": "debug",
             "format": "json"
         }

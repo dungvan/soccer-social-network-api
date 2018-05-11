@@ -3,14 +3,14 @@ package router
 import (
 	"net/http"
 
-	"github.com/dungvan2512/soccer-social-network/infrastructure"
-	"github.com/dungvan2512/soccer-social-network/match"
-	"github.com/dungvan2512/soccer-social-network/post"
-	"github.com/dungvan2512/soccer-social-network/shared/base"
-	mMiddleware "github.com/dungvan2512/soccer-social-network/shared/middleware"
-	"github.com/dungvan2512/soccer-social-network/team"
-	"github.com/dungvan2512/soccer-social-network/tournament"
-	"github.com/dungvan2512/soccer-social-network/user"
+	"github.com/dungvan2512/soccer-social-network-api/infrastructure"
+	"github.com/dungvan2512/soccer-social-network-api/match"
+	"github.com/dungvan2512/soccer-social-network-api/post"
+	"github.com/dungvan2512/soccer-social-network-api/shared/base"
+	mMiddleware "github.com/dungvan2512/soccer-social-network-api/shared/middleware"
+	"github.com/dungvan2512/soccer-social-network-api/team"
+	"github.com/dungvan2512/soccer-social-network-api/tournament"
+	"github.com/dungvan2512/soccer-social-network-api/user"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 )
@@ -90,6 +90,15 @@ func (r *Router) SetupHandler() {
 			cr.Get("/", ph.Show)
 			cr.Post("/star", ph.UpStar)
 			cr.Delete("/star", ph.DeleteStar)
+			cr.Route("/comment", func(cr chi.Router) {
+				cr.Post("/", ph.CommentCreate)
+				cr.Route("/{comment_id:0*([1-9])([0-9]?)+}", func(cr chi.Router) {
+					cr.Delete("/", ph.CommentDelete)
+					cr.Put("/", ph.CommentUpdate)
+					cr.Post("/star", ph.CommentUpStar)
+					cr.Delete("/star", ph.CommentDeleteStar)
+				})
+			})
 		})
 	})
 

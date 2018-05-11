@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 
-	detection "github.com/dungvan2512/soccer-social-network/shared/file-detection"
+	detection "github.com/dungvan2512/soccer-social-network-api/shared/file-detection"
 )
 
 // ExistsFile check exists file.

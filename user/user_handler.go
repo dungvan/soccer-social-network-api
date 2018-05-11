@@ -7,12 +7,12 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/dungvan2512/soccer-social-network/shared/auth"
+	"github.com/dungvan2512/soccer-social-network-api/shared/auth"
 	"github.com/go-chi/chi"
 
-	"github.com/dungvan2512/soccer-social-network/infrastructure"
-	"github.com/dungvan2512/soccer-social-network/shared/base"
-	"github.com/dungvan2512/soccer-social-network/shared/utils"
+	"github.com/dungvan2512/soccer-social-network-api/infrastructure"
+	"github.com/dungvan2512/soccer-social-network-api/shared/base"
+	"github.com/dungvan2512/soccer-social-network-api/shared/utils"
 	"github.com/sirupsen/logrus"
 )
 

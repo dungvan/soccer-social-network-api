@@ -4,8 +4,8 @@
 ### run local development:
 - build docker
 ```bash
-$ git clone https://github.com/dungvan2512/soccer-social-network
-$ cd soccer-social-network
+$ git clone https://github.com/dungvan2512/soccer-social-network-api
+$ cd soccer-social-network-api
 $ docker-compose build
 $ docker-compose up
 ```
@@ -15,4 +15,4 @@ $ docker-compose up
 ```bash
 $ ./ngrok http 9000
 ```
-- waiting for ngrok export successfully, copy the `endpoint` which ngrok generate to `soccer-social-network/config/local.json`, replace to value of `endpoint` of `objectstorage`
+- waiting for ngrok export successfully, copy the `endpoint` which ngrok generate to `soccer-social-network-api/config/local.json`, replace to value of `endpoint` of `objectstorage`

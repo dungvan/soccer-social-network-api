@@ -6,12 +6,12 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/dungvan2512/soccer-social-network/model"
-	"github.com/dungvan2512/soccer-social-network/shared/auth"
+	"github.com/dungvan2512/soccer-social-network-api/model"
+	"github.com/dungvan2512/soccer-social-network-api/shared/auth"
 	"github.com/jinzhu/gorm"
 
-	"github.com/dungvan2512/soccer-social-network/infrastructure"
-	"github.com/dungvan2512/soccer-social-network/shared/utils"
+	"github.com/dungvan2512/soccer-social-network-api/infrastructure"
+	"github.com/dungvan2512/soccer-social-network-api/shared/utils"
 	"github.com/sirupsen/logrus"
 )
 

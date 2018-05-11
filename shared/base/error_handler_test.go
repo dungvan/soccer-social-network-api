@@ -6,7 +6,7 @@ import (
 
 	"net/http/httptest"
 
-	"github.com/dungvan2512/soccer-social-network/infrastructure"
+	"github.com/dungvan2512/soccer-social-network-api/infrastructure"
 	"github.com/stretchr/testify/assert"
 )
 
