@@ -292,9 +292,9 @@ func (r *repository) GetAllCommentsByPostID(postID uint) ([]Comment, error) {
 	comments := make([]Comment, 0)
 	err := r.db.Model(&model.Comment{}).
 		Select("comments.id, comments.user_id, users.user_name, users.first_name, users.last_name, comments.content, comments.created_at").
-		Joins(`INNER JOIN users ON (comments.user_id = users.id AND users.deleted_at IS NULL AND comment.post_id = ?)`, postID).
+		Joins(`INNER JOIN users ON (comments.user_id = users.id AND users.deleted_at IS NULL AND comments.post_id = ?)`, postID).
 		Limit(100).
-		Order("comments.created_at desc, comments.id desc").
+		Order("comments.created_at asc, comments.id asc").
 		Scan(&comments).Error
 	return comments, utils.ErrorsWrap(err, "can't get comment.")
 }

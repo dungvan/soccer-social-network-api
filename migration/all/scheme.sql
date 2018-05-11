@@ -3,13 +3,15 @@ CREATE DATABASE ssn owner postgres encoding 'utf8';
 
 /* Drop Tables */
 DROP TABLE IF EXISTS "star_counts";
+DROP TABLE IF EXISTS "comment_stars";
 DROP TABLE IF EXISTS "post_hashtags";
-DROP TABLE IF EXISTS "posts_stars";
+DROP TABLE IF EXISTS "post_stars";
 DROP TABLE IF EXISTS "team_players";
 DROP TABLE IF EXISTS "tournament_teams";
 DROP TABLE IF EXISTS "hashtags";
 DROP TABLE IF EXISTS "images";
 DROP TABLE IF EXISTS "videos";
+DROP TABLE IF EXISTS "comments";
 DROP TABLE IF EXISTS "posts";
 DROP TABLE IF EXISTS "players";
 DROP TABLE IF EXISTS "masters";
@@ -72,6 +74,20 @@ CREATE TABLE "posts"
 ) WITHOUT OIDS;
 
 ALTER SEQUENCE posts_id_SEQ INCREMENT 1 RESTART 1;
+
+CREATE TABLE "comments"
+(
+	id serial NOT NULL UNIQUE,
+	post_id int NOT NULL,
+	user_id int NOT NULL,
+	content text,
+	created_at timestamp,
+	updated_at timestamp,
+	deleted_at timestamp,
+	PRIMARY KEY (id)
+) WITHOUT OIDS;
+
+ALTER SEQUENCE comment_id_SEQ INCREMENT 1 RESTART 1;
 
 CREATE TABLE "locations"
 (
@@ -152,6 +168,20 @@ CREATE TABLE "post_stars"
 ) WITHOUT OIDS;
 
 ALTER SEQUENCE post_stars_id_SEQ INCREMENT 1 RESTART 1;
+
+CREATE TABLE "comment_stars"
+(
+	id serial NOT NULL UNIQUE,
+	user_id int NOT NULL,
+	comment_id int NOT NULL,
+	created_at timestamp,
+	updated_at timestamp,
+	deleted_at timestamp,
+	PRIMARY KEY (id),
+	CONSTRAINT comment_stars_comment_id_user_id_UNIQUE UNIQUE (comment_id, user_id)
+) WITHOUT OIDS;
+
+ALTER SEQUENCE comment_stars_id_SEQ INCREMENT 1 RESTART 1;
 
 CREATE TABLE "star_counts"
 (
@@ -310,6 +340,34 @@ ALTER TABLE post_stars
 ;
 
 ALTER TABLE post_stars
+	ADD FOREIGN KEY (user_id)
+	REFERENCES "users" (id)
+	ON UPDATE RESTRICT
+	ON DELETE RESTRICT
+;
+
+ALTER TABLE comments
+	ADD FOREIGN KEY (user_id)
+	REFERENCES "users" (id)
+	ON UPDATE RESTRICT
+	ON DELETE RESTRICT
+;
+
+ALTER TABLE comments
+	ADD FOREIGN KEY (post_id)
+	REFERENCES "posts" (id)
+	ON UPDATE RESTRICT
+	ON DELETE RESTRICT
+;
+
+ALTER TABLE comment_stars
+	ADD FOREIGN KEY (comment_id)
+	REFERENCES "comments" (id)
+	ON UPDATE RESTRICT
+	ON DELETE RESTRICT
+;
+
+ALTER TABLE comment_stars
 	ADD FOREIGN KEY (user_id)
 	REFERENCES "users" (id)
 	ON UPDATE RESTRICT

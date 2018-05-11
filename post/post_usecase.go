@@ -228,6 +228,29 @@ func (u *usecase) Show(postID uint) (RespPost, error) {
 		return output
 	}()
 
+	comments, err := u.repository.GetAllCommentsByPostID(postID)
+	if err != nil {
+		return response, utils.ErrorsWrap(err, "repository.GetAllCommentsByPostID() error")
+	}
+	response.Comments = func() []RespComment {
+		output := make([]RespComment, 0)
+		if comments != nil && len(comments) > 0 {
+			for _, comment := range comments {
+				output = append(output, RespComment{
+					ID:      comment.ID,
+					Content: comment.Content,
+					User: RespUser{
+						ID:        comment.UserID,
+						UserName:  comment.UserName,
+						FirstName: comment.FirstName,
+						LastName:  comment.LastName,
+					},
+				})
+			}
+		}
+		return output
+	}()
+
 	return response, nil
 }
 
@@ -288,14 +311,14 @@ func (u *usecase) CountDownStar(request StarCountRequest) (StarCountResponse, er
 	_, post, err := u.repository.FindPostByID(request.ID)
 	if err == gorm.ErrRecordNotFound {
 		response.TypeOfStatusCode = http.StatusNotFound
-		return response, errors.New("The outfit does not exist")
+		return response, errors.New("The post does not exist")
 	} else if err != nil {
 		return response, utils.ErrorsWrap(err, "repository.FindPostByID error")
 	}
 	postStarCount, err := u.repository.FindPostStarCount(*post)
 	if err == gorm.ErrRecordNotFound || (err == nil && postStarCount.Quantity == defaultStarCount) {
 		response.TypeOfStatusCode = http.StatusBadRequest
-		return response, errors.New("The outfit has no stars")
+		return response, errors.New("The post has no stars")
 	} else if err != nil {
 		return response, utils.ErrorsWrap(err, "repository.FindPostStarCount error")
 	}
@@ -378,9 +401,9 @@ func (u *usecase) Delete(postID uint, ctxUser model.User) error {
 	defer func() {
 		if err != nil {
 			tx.Rollback()
-			return
+		} else {
+			tx.Commit()
 		}
-		tx.Commit()
 	}()
 
 	err = u.repository.DeletePost(postID, tx)
@@ -464,14 +487,14 @@ func (u *usecase) CommentCountDownStar(request StarCountRequest) (StarCountRespo
 	comment, err := u.repository.FindCommentByID(request.ID)
 	if err == gorm.ErrRecordNotFound {
 		response.TypeOfStatusCode = http.StatusNotFound
-		return response, errors.New("The outfit does not exist")
+		return response, errors.New("The post does not exist")
 	} else if err != nil {
 		return response, utils.ErrorsWrap(err, "repository.FindCommentByID error")
 	}
 	commentStarCount, err := u.repository.FindCommentStarCount(*comment)
 	if err == gorm.ErrRecordNotFound || (err == nil && commentStarCount.Quantity == defaultStarCount) {
 		response.TypeOfStatusCode = http.StatusBadRequest
-		return response, errors.New("The outfit has no stars")
+		return response, errors.New("The post has no stars")
 	} else if err != nil {
 		return response, utils.ErrorsWrap(err, "repository.FindCommentStarCount error")
 	}

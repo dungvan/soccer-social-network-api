@@ -29,6 +29,11 @@ type RespPost struct {
 	Comments         []RespComment `json:"comments"`
 }
 
+// CreateCommentResponse struct
+type CreateCommentResponse struct {
+	CommentID uint `json:"comment_id"`
+}
+
 // RespComment struct
 type RespComment struct {
 	ID      uint     `json:"id"`

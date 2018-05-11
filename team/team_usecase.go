@@ -225,9 +225,9 @@ func (u *usecase) Update(r UpdateRequest, ctxUser model.User) (RespTeam, error) 
 	defer func() {
 		if err != nil {
 			tx.Rollback()
-			return
+		} else {
+			tx.Commit()
 		}
-		tx.Commit()
 	}()
 
 	err = u.repository.UpdateTeam(team, tx)
@@ -267,9 +267,9 @@ func (u *usecase) Delete(teamID uint, ctxUser model.User) error {
 	defer func() {
 		if err != nil {
 			tx.Rollback()
-			return
+		} else {
+			tx.Commit()
 		}
-		tx.Commit()
 	}()
 
 	err = u.repository.DeleteTeam(teamID, tx)

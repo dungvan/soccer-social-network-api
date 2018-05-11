@@ -55,7 +55,7 @@ type Image struct {
 
 // CreateCommentRequest struct
 type CreateCommentRequest struct {
-	Content string `json:"caption" validate:"required"`
+	Content string `json:"content" validate:"required"`
 	PostID  uint   `json:"post_id" validate:"required"`
 	UserID  uint   `validate:"required"`
 }

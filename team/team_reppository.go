@@ -106,7 +106,7 @@ func (r *repository) CreateTeamPlayers(teamPlayers []model.TeamPlayer, tx *gorm.
 func (r *repository) GetTeamMaster(teamID uint) (*model.User, error) {
 	mstUser := model.User{}
 	result := r.db.Model(&mstUser).
-		Select("users.id, users.user_name, users.full_name").
+		Select("users.id, users.user_name, users.first_name, users.last_name").
 		Joins(`INNER JOIN masters ON (masters.user_id = users.id  AND masters.deleted_at IS NULL)`).
 		Joins(`INNER JOIN teams ON (teams.id = masters.owner_id AND masters.owner_type = 'teams' AND teams.id = ? AND teams.deleted_at IS NULL)`, teamID).
 		Scan(&mstUser)
@@ -116,7 +116,7 @@ func (r *repository) GetTeamMaster(teamID uint) (*model.User, error) {
 func (r *repository) GetTeamPlayers(teamID uint) ([]Player, error) {
 	players := make([]Player, 0)
 	result := r.db.Model(&model.User{}).
-		Select("users.id, users.full_name, users.user_name, users.score, team_players.position").
+		Select("users.id, users.first_name, users.last_name, users.user_name, users.score, team_players.position").
 		Joins(`INNER JOIN team_players ON team_players.user_id = users.id AND team_players.team_id = ? AND team_players.deleted_at IS NULL`, teamID).
 		Scan(&players)
 	return players, utils.ErrorsWrap(result.Error, "can't get team-players relation")
@@ -135,7 +135,7 @@ func (r *repository) DeleteTeamMaster(teamID uint, transaction *gorm.DB) error {
 }
 
 func (r *repository) DeleteTeamPlayers(teamsID []uint, transaction *gorm.DB) error {
-	return utils.ErrorsWrap(transaction.Where("team_id = in", teamsID).Delete(&model.TeamPlayer{}).Error, "can't delete related team-players")
+	return utils.ErrorsWrap(transaction.Where("team_id IN (?)", teamsID).Delete(&model.TeamPlayer{}).Error, "can't delete related team-players")
 }
 
 func (r *repository) DeleteAllTeamPlayers(teamID uint, transaction *gorm.DB) error {

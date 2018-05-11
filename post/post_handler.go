@@ -54,8 +54,8 @@ func (h *HTTPHandler) Index(w http.ResponseWriter, r *http.Request) {
 
 // GetByUserID handler
 func (h *HTTPHandler) GetByUserID(w http.ResponseWriter, r *http.Request) {
-	userID, _ := strconv.Atoi(chi.URLParam(r, "user_id"))
-	resp, err := h.usecase.Index(uint(userID))
+	userID, _ := strconv.Atoi(chi.URLParam(r, "id"))
+	resp, err := h.usecase.GetByUserID(uint(userID))
 	if err != nil {
 		h.Logger.WithFields(logrus.Fields{
 			"error": err,
@@ -125,11 +125,11 @@ func (h *HTTPHandler) Show(w http.ResponseWriter, r *http.Request) {
 	h.ResponseJSON(w, response)
 }
 
-// UpStar increase the number of "star" about outfit.
+// UpStar increase the number of "star" about post.
 //
-// "First": to register to OutfitStarCount Outfit ID.
-// "Second": to register to PostStarHistory Outfit ID and User ID.
-// "Finally": returns latest number of stars about specified outfit to the app.
+// "First": to register to PostStarCount Post ID.
+// "Second": to register to PostStarHistory Post ID and User ID.
+// "Finally": returns latest number of stars about specified post to the app.
 func (h *HTTPHandler) UpStar(w http.ResponseWriter, r *http.Request) {
 	postID, err := strconv.Atoi(chi.URLParam(r, "id"))
 	request := StarCountRequest{}
@@ -157,11 +157,11 @@ func (h *HTTPHandler) UpStar(w http.ResponseWriter, r *http.Request) {
 	h.ResponseJSON(w, response)
 }
 
-// DeleteStar decrease the number of "star" about outfit
+// DeleteStar decrease the number of "star" about post
 //
-// "First": rewrites record of table “post_star_history” with key column “id_user_app” and "id_outfit".
-// "Second": rewrites record of table “outfit_star_count” with key column "id_outfit".
-// "Finally": returns latest number of stars about specified outfit.
+// "First": rewrites record of table “post_star_history” with key column “id_user_app” and "id_post".
+// "Second": rewrites record of table “post_star_count” with key column "id_post".
+// "Finally": returns latest number of stars about specified post.
 func (h *HTTPHandler) DeleteStar(w http.ResponseWriter, r *http.Request) {
 	postID, err := strconv.Atoi(chi.URLParam(r, "id"))
 	request := StarCountRequest{}
@@ -252,6 +252,7 @@ func (h *HTTPHandler) UploadImages(w http.ResponseWriter, r *http.Request) {
 	}
 	fileMap := r.MultipartForm.File
 	fileHeaders := fileMap["image_files"]
+
 	if fileHeaders != nil {
 		request.Images = []Image{}
 		for _, fileHeader := range fileHeaders {
@@ -277,10 +278,7 @@ func (h *HTTPHandler) UploadImages(w http.ResponseWriter, r *http.Request) {
 			request.Images = append(request.Images, image)
 		}
 	}
-	// validate post data.
-	if err := h.Validate(w, request); err != nil {
-		return
-	}
+
 	for index, image := range request.Images {
 		if image.Body != nil {
 			filename, err := h.GetRandomFileName("", image.Name)
@@ -291,6 +289,11 @@ func (h *HTTPHandler) UploadImages(w http.ResponseWriter, r *http.Request) {
 			}
 			request.Images[index].Name = filename
 		}
+	}
+
+	// validate post data.
+	if err := h.Validate(w, request); err != nil {
+		return
 	}
 	// Save to S3.
 	response, err := h.usecase.UploadImages(request)
@@ -317,7 +320,7 @@ func (h *HTTPHandler) UploadVideos(w http.ResponseWriter, r *http.Request) {
 // CommentCreate a comment Handler
 func (h *HTTPHandler) CommentCreate(w http.ResponseWriter, r *http.Request) {
 	// mapping comment to struct.
-	request := CreateRequest{}
+	request := CreateCommentRequest{}
 	messages, err := h.ParseJSON(r, &request)
 	if len(messages) != 0 {
 		common := utils.CommonResponse{Message: "validation error.", Errors: messages}
@@ -329,13 +332,17 @@ func (h *HTTPHandler) CommentCreate(w http.ResponseWriter, r *http.Request) {
 		h.StatusServerError(w, common)
 		return
 	}
-	request.UserID = auth.GetUserFromContext(r.Context()).ID
+
+	postID, _ := strconv.Atoi(chi.URLParam(r, "id"))
+	userID := auth.GetUserFromContext(r.Context()).ID
+	request.PostID = uint(postID)
+	request.UserID = userID
 	// validate get data.
 	if err = h.Validate(w, request); err != nil {
 		return
 	}
 
-	commentID, err := h.usecase.Create(request)
+	commentID, err := h.usecase.CommentCreate(request)
 	if err != nil {
 		h.Logger.WithFields(logrus.Fields{
 			"error": err,
@@ -344,20 +351,20 @@ func (h *HTTPHandler) CommentCreate(w http.ResponseWriter, r *http.Request) {
 		h.StatusServerError(w, common)
 		return
 	}
-	h.ResponseJSON(w, CreateResponse{commentID})
+	h.ResponseJSON(w, CreateCommentResponse{commentID})
 }
 
-// CommentUpStar increase the number of "star" about outfit.
+// CommentUpStar increase the number of "star" about post.
 //
-// "First": to register to OutfitStarCount Outfit ID.
-// "Second": to register to CommentStarHistory Outfit ID and User ID.
-// "Finally": returns latest number of stars about specified outfit to the app.
+// "First": to register to PostStarCount Post ID.
+// "Second": to register to CommentStarHistory Post ID and User ID.
+// "Finally": returns latest number of stars about specified post to the app.
 func (h *HTTPHandler) CommentUpStar(w http.ResponseWriter, r *http.Request) {
 	commentID, err := strconv.Atoi(chi.URLParam(r, "comment_id"))
 	request := StarCountRequest{}
 	request.ID = uint(commentID)
 	request.UserID = auth.GetUserFromContext(r.Context()).ID
-	response, err := h.usecase.CountUpStar(request)
+	response, err := h.usecase.CommentCountUpStar(request)
 	if err != nil {
 		h.Logger.WithFields(logrus.Fields{
 			"error": err,
@@ -379,17 +386,17 @@ func (h *HTTPHandler) CommentUpStar(w http.ResponseWriter, r *http.Request) {
 	h.ResponseJSON(w, response)
 }
 
-// CommentDeleteStar decrease the number of "star" about outfit
+// CommentDeleteStar decrease the number of "star" about post
 //
-// "First": rewrites record of table “comment_star_history” with key column “id_user_app” and "id_outfit".
-// "Second": rewrites record of table “outfit_star_count” with key column "id_outfit".
-// "Finally": returns latest number of stars about specified outfit.
+// "First": rewrites record of table “comment_star_history” with key column “id_user_app” and "id_post".
+// "Second": rewrites record of table “post_star_count” with key column "id_post".
+// "Finally": returns latest number of stars about specified post.
 func (h *HTTPHandler) CommentDeleteStar(w http.ResponseWriter, r *http.Request) {
 	commentID, err := strconv.Atoi(chi.URLParam(r, "comment_id"))
 	request := StarCountRequest{}
 	request.ID = uint(commentID)
 	request.UserID = auth.GetUserFromContext(r.Context()).ID
-	response, err := h.usecase.CountDownStar(request)
+	response, err := h.usecase.CommentCountDownStar(request)
 	if err != nil {
 		h.Logger.WithFields(logrus.Fields{
 			"error": err,
@@ -413,7 +420,7 @@ func (h *HTTPHandler) CommentDeleteStar(w http.ResponseWriter, r *http.Request) 
 // CommentUpdate handler
 func (h *HTTPHandler) CommentUpdate(w http.ResponseWriter, r *http.Request) {
 	commentID, _ := strconv.Atoi(chi.URLParam(r, "comment_id"))
-	request := &UpdateRequest{}
+	request := &UpdateCommentRequest{}
 	request.ID = uint(commentID)
 	messages, err := h.ParseJSON(r, request)
 	if len(messages) != 0 {
@@ -432,7 +439,7 @@ func (h *HTTPHandler) CommentUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	curUser := auth.GetUserFromContext(r.Context())
-	comment, err := h.usecase.Update(*request, curUser)
+	err = h.usecase.CommentUpdate(*request, curUser)
 
 	if err != nil {
 		common := utils.CommonResponse{Message: "Update failed", Errors: []string{err.Error()}}
@@ -440,7 +447,7 @@ func (h *HTTPHandler) CommentUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.ResponseJSON(w, comment)
+	h.ResponseJSON(w, utils.CommonResponse{Message: "Update success"})
 }
 
 // CommentDelete handler
@@ -459,7 +466,7 @@ func (h *HTTPHandler) CommentDelete(w http.ResponseWriter, r *http.Request) {
 
 // NewHTTPHandler return new HTTPHandler instance.
 func NewHTTPHandler(bh *base.HTTPHandler, bu *base.Usecase, br *base.Repository, s *infrastructure.SQL, c *infrastructure.Cache, s3 *infrastructure.S3) *HTTPHandler {
-	// outfit set.
+	// post set.
 	or := NewRepository(br, s.DB, c.Conn, s3.NewRequest)
 	ou := NewUsecase(bu, s.DB, or)
 	return &HTTPHandler{*bh, ou}
