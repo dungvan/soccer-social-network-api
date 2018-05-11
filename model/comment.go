@@ -6,5 +6,7 @@ import "github.com/jinzhu/gorm"
 type Comment struct {
 	*gorm.Model
 	PostID    uint
+	UserID    uint
+	Content   string
 	StarCount *StarCount `gorm:"polymorphic:Owner;"`
 }

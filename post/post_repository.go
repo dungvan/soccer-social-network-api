@@ -16,10 +16,15 @@ import (
 
 // Repository interface
 type Repository interface {
+
+	//=======================================
+	//==================POST=================
+	//=======================================
+
 	// GetAllPost return all post with pagination
-	GetAllPost(page uint) (total uint, posts []model.Post, err error)
+	GetAllPost(page uint) (total uint, posts []Post, err error)
 	// GetAllPostsByUserID return all of post record
-	GetAllPostsByUserID(userID uint) ([]model.Post, error)
+	GetAllPostsByUserID(userID uint) (RespUser, []model.Post, error)
 	// CreatePost registers record to table post
 	CreatePost(post *model.Post, transaction *gorm.DB) error
 	// CreateHashtags is insert hashtag list into hashtag table if it does not exist.
@@ -31,7 +36,7 @@ type Repository interface {
 	// FindPostStarHistory find PostStar contain record has deleted_at != null.
 	FindPostStar(userID, postID uint) (*model.PostStar, error)
 	// FindPostByID find a post by id
-	FindPostByID(postID uint) (*model.Post, error)
+	FindPostByID(postID uint) (RespUser, *model.Post, error)
 	// CreatePostStar create new PostStar
 	CreatePostStar(userID, postID uint, transasction *gorm.DB) (rowsAffected int64, err error)
 	// RestorePostStar update deleted_at field = nill
@@ -52,6 +57,33 @@ type Repository interface {
 	DeletePost(postID uint, transaction *gorm.DB) error
 	// DeleteRelatePostImages
 	DeleteRelatedPostImages(postID uint, transaction *gorm.DB) error
+
+	//=======================================
+	//================COMMENT================
+	//=======================================
+
+	// GetAllCommentsByPostID return all of comment record
+	GetAllCommentsByPostID(postID uint) ([]Comment, error)
+	// CreateComment registers record to table comment
+	CreateComment(comment *model.Comment) error
+	// FindCommentStarHistory find CommentStar contain record has deleted_at != null.
+	FindCommentStar(userID, commentID uint) (*model.CommentStar, error)
+	// FindCommentByID find a comment by id
+	FindCommentByID(commentID uint) (*model.Comment, error)
+	// CreateCommentStar create new CommentStar
+	CreateCommentStar(userID, commentID uint, transasction *gorm.DB) (rowsAffected int64, err error)
+	// RestoreCommentStar update deleted_at field = nill
+	RestoreCommentStar(userID uint, commentID uint, transaction *gorm.DB) (rowsAffected int64, err error)
+	// FindCommentStarCount find StarCount.
+	FindCommentStarCount(comment model.Comment) (*model.StarCount, error)
+	// UpdateCommentStarCount update StarCount field in the star_counts table
+	UpdateCommentStarCount(unit int, commentID uint, transaction *gorm.DB) (starCount uint, err error)
+	// soft delete CommentStar
+	DeleteCommentStar(userID uint, commentID uint, transaction *gorm.DB) (rowsAffected int64, err error)
+	// UpdateComment
+	UpdateComment(comment *model.Comment) error
+	// DeleteComment
+	DeleteComment(commentID uint) error
 }
 
 type repository struct {
@@ -61,12 +93,17 @@ type repository struct {
 	s3    infrastructure.NewS3RequestFunc
 }
 
-func (r *repository) GetAllPost(page uint) (uint, []model.Post, error) {
+//=======================================
+//==================POST=================
+//=======================================
+
+func (r *repository) GetAllPost(page uint) (uint, []Post, error) {
 	var total uint
 	var err error
-	posts := make([]model.Post, 0)
+	posts := make([]Post, 0)
 	result := r.db.Model(&model.Post{}).
-		Select("id, user_id, caption, created_at")
+		Select("posts.id, posts.user_id, posts.caption, posts.created_at, users.user_name, users.first_name, users.last_name").
+		Joins(`INNER JOIN users ON (users.deleted_at IS NULL AND posts.user_id = users.id)`)
 	result.Count(&total)
 	if total <= pagingLimit*(page-1) {
 		return total, posts, gorm.ErrRecordNotFound
@@ -77,14 +114,19 @@ func (r *repository) GetAllPost(page uint) (uint, []model.Post, error) {
 	return total, posts, utils.ErrorsWrap(err, "can't get all posts")
 }
 
-func (r *repository) GetAllPostsByUserID(userID uint) ([]model.Post, error) {
+func (r *repository) GetAllPostsByUserID(userID uint) (RespUser, []model.Post, error) {
 	posts := make([]model.Post, 0)
+	user := RespUser{ID: userID}
 	err := r.db.Model(&model.Post{}).
 		Select("id, user_id, caption, created_at").Where("user_id = ?", userID).
 		Limit(100).
 		Order("created_at desc, id desc").
 		Scan(&posts).Error
-	return posts, utils.ErrorsWrap(err, "can't get post.")
+	if err != nil {
+		return user, posts, utils.ErrorsWrap(err, "can't get post.")
+	}
+	err = r.db.Model(&model.User{}).Where("id = ?", userID).Scan(&user).Error
+	return user, posts, utils.ErrorsWrap(err, "can't get related post-user.")
 }
 
 func (r *repository) CreatePost(p *model.Post, tx *gorm.DB) error {
@@ -155,13 +197,18 @@ func (r *repository) FindPostStar(userID, postID uint) (*model.PostStar, error) 
 	return postStar, utils.ErrorsWrap(err, "can't find")
 }
 
-func (r *repository) FindPostByID(postID uint) (*model.Post, error) {
+func (r *repository) FindPostByID(postID uint) (RespUser, *model.Post, error) {
 	post := &model.Post{}
+	user := RespUser{}
 	err := r.db.Where("id = ?", postID).First(post).Error
 	if err == gorm.ErrRecordNotFound {
-		return post, err
+		return user, post, err
 	}
-	return post, utils.ErrorsWrap(err, "can't find")
+	if err != nil {
+		return user, post, utils.ErrorsWrap(err, "can't find")
+	}
+	err = r.db.Model(&model.User{}).Where("id = ?", post.UserID).Scan(&user).Error
+	return user, post, utils.ErrorsWrap(err, "can't get related post-user.")
 }
 
 func (r *repository) CreatePostStar(userID, postID uint, tx *gorm.DB) (int64, error) {
@@ -235,6 +282,93 @@ func (r *repository) DeletePost(postID uint, transaction *gorm.DB) error {
 
 func (r *repository) DeleteRelatedPostImages(postID uint, transaction *gorm.DB) error {
 	return utils.ErrorsWrap(r.db.Where("post_id = ?", postID).Delete(&model.Image{}).Error, "can't Delete related post-images")
+}
+
+//=======================================
+//================COMMENT================
+//=======================================
+
+func (r *repository) GetAllCommentsByPostID(postID uint) ([]Comment, error) {
+	comments := make([]Comment, 0)
+	err := r.db.Model(&model.Comment{}).
+		Select("comments.id, comments.user_id, users.user_name, users.first_name, users.last_name, comments.content, comments.created_at").
+		Joins(`INNER JOIN users ON (comments.user_id = users.id AND users.deleted_at IS NULL AND comment.post_id = ?)`, postID).
+		Limit(100).
+		Order("comments.created_at desc, comments.id desc").
+		Scan(&comments).Error
+	return comments, utils.ErrorsWrap(err, "can't get comment.")
+}
+
+func (r *repository) CreateComment(p *model.Comment) error {
+	result := r.db.Create(p)
+	return utils.ErrorsWrap(result.Error, "can't create comment")
+}
+
+func (r *repository) FindCommentStar(userID, commentID uint) (*model.CommentStar, error) {
+	commentStar := &model.CommentStar{}
+	err := r.db.Unscoped().Where("comment_id = ? AND user_id = ?", commentID, userID).First(commentStar).Error
+	if err == gorm.ErrRecordNotFound {
+		return commentStar, err
+	}
+	return commentStar, utils.ErrorsWrap(err, "can't find")
+}
+
+func (r *repository) FindCommentByID(commentID uint) (*model.Comment, error) {
+	comment := &model.Comment{}
+	err := r.db.Where("id = ?", commentID).First(comment).Error
+	if err == gorm.ErrRecordNotFound {
+		return comment, err
+	}
+	return comment, utils.ErrorsWrap(err, "can't find")
+}
+
+func (r *repository) CreateCommentStar(userID, commentID uint, tx *gorm.DB) (int64, error) {
+	commentStar := &model.CommentStar{CommentID: commentID, UserID: userID}
+	result := tx.Create(commentStar)
+	return result.RowsAffected, utils.ErrorsWrap(result.Error, "can't create")
+}
+
+func (r *repository) RestoreCommentStar(userID uint, commentID uint, tx *gorm.DB) (int64, error) {
+	commentStar, err := r.FindCommentStar(userID, commentID)
+	if err != nil {
+		return 0, utils.ErrorsWrap(err, "can't find")
+	}
+	commentStar.DeletedAt = nil
+	result := tx.Unscoped().Save(commentStar)
+	return result.RowsAffected, utils.ErrorsWrap(result.Error, "can't restore")
+}
+
+func (r *repository) FindCommentStarCount(comment model.Comment) (*model.StarCount, error) {
+	starCount := &model.StarCount{}
+	err := r.db.Model(&comment).Related(starCount, "StarCount").Error
+	if err == gorm.ErrRecordNotFound {
+		return starCount, err
+	}
+	return starCount, utils.ErrorsWrap(err, "can't find")
+}
+
+func (r *repository) UpdateCommentStarCount(unit int, commentID uint, tx *gorm.DB) (uint, error) {
+	starCount := &model.StarCount{}
+	err := tx.Where("owner_id = ? and owner_type = ?", commentID, "comments").First(starCount).Error
+	if err != nil {
+		return 0, utils.ErrorsWrap(err, "can't find")
+	}
+	starCount.Quantity += uint(unit)
+	err = tx.Save(starCount).Error
+	return starCount.Quantity, utils.ErrorsWrap(err, "can't update")
+}
+
+func (r *repository) DeleteCommentStar(userID uint, commentID uint, tx *gorm.DB) (int64, error) {
+	result := tx.Where("user_id = ? AND comment_id =?", userID, commentID).Delete(&model.CommentStar{})
+	return result.RowsAffected, utils.ErrorsWrap(result.Error, "can't delete")
+}
+
+func (r *repository) UpdateComment(comment *model.Comment) error {
+	return utils.ErrorsWrap(r.db.Model(&model.Comment{}).Update(comment).Error, "can't update comment")
+}
+
+func (r *repository) DeleteComment(commentID uint) error {
+	return utils.ErrorsWrap(r.db.Where("id = ?", commentID).Delete(&model.Comment{}).Error, "can't Delete comment")
 }
 
 // NewRepository create new instance of Repository

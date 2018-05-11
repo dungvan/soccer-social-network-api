@@ -14,4 +14,5 @@ type Post struct {
 	Stars     []Star     `gorm:"many2many:post_stars"`
 	StarCount *StarCount `gorm:"polymorphic:Owner"`
 	Images    []Image
+	Comments  []Comment
 }

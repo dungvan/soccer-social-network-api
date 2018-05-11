@@ -14,6 +14,11 @@ import (
 
 // Usecase interface
 type Usecase interface {
+
+	//===========================================
+	//====================POST===================
+	//===========================================
+
 	// Index usecase
 	Index(userID uint) (IndexResponse, error)
 	// GetByUserID usecase
@@ -32,6 +37,16 @@ type Usecase interface {
 	Delete(postID uint, ctxUser model.User) error
 	// Add images to s3
 	UploadImages(request UploadImagesRequest) (UploadImagesResponse, error)
+
+	//===========================================
+	//==================COMMENT==================
+	//===========================================
+
+	CommentCreate(r CreateCommentRequest) (uint, error)
+	CommentCountUpStar(request StarCountRequest) (StarCountResponse, error)
+	CommentCountDownStar(request StarCountRequest) (StarCountResponse, error)
+	CommentUpdate(r UpdateCommentRequest, ctxUser model.User) error
+	CommentDelete(commentID uint, ctxUser model.User) error
 }
 
 type usecase struct {
@@ -57,8 +72,13 @@ func (u *usecase) Index(page uint) (IndexResponse, error) {
 			respUsers := make([]RespPost, 0)
 			for _, post := range posts {
 				respUsers = append(respUsers, RespPost{
-					ID:        post.ID,
-					UserID:    post.UserID,
+					ID: post.ID,
+					User: RespUser{
+						ID:        post.UserID,
+						UserName:  post.UserName,
+						FirstName: post.FirstName,
+						LastName:  post.LastName,
+					},
 					Caption:   post.Caption,
 					CreatedAt: post.CreatedAt,
 				})
@@ -71,7 +91,7 @@ func (u *usecase) Index(page uint) (IndexResponse, error) {
 
 func (u *usecase) GetByUserID(userID uint) (IndexResponse, error) {
 	indexResp := IndexResponse{}
-	result, err := u.repository.GetAllPostsByUserID(userID)
+	postUser, result, err := u.repository.GetAllPostsByUserID(userID)
 	if err != nil {
 		return indexResp, utils.ErrorsWrap(err, "repository.GetAllPostsByUserID() error.")
 	}
@@ -85,7 +105,7 @@ func (u *usecase) GetByUserID(userID uint) (IndexResponse, error) {
 		}
 		data := RespPost{
 			ID:      post.ID,
-			UserID:  userID,
+			User:    postUser,
 			Caption: post.Caption,
 			ImageURLs: func() []interface{} {
 				output := []interface{}{}
@@ -170,7 +190,7 @@ func (u *usecase) Create(r CreateRequest) (uint, error) {
 
 func (u *usecase) Show(postID uint) (RespPost, error) {
 	response := RespPost{}
-	post, err := u.repository.FindPostByID(postID)
+	user, post, err := u.repository.FindPostByID(postID)
 	if err == gorm.ErrRecordNotFound {
 		response.TypeOfStatusCode = http.StatusNotFound
 		return response, utils.ErrorsNew("the post dose not exist")
@@ -185,7 +205,7 @@ func (u *usecase) Show(postID uint) (RespPost, error) {
 	bucketName := infrastructure.GetConfigString("objectstorage.bucketname")
 	response.ID = post.ID
 	response.Caption = post.Caption
-	response.UserID = post.UserID
+	response.User = user
 	response.CreatedAt = post.CreatedAt
 	response.ImageURLs = func() []interface{} {
 		output := []interface{}{}
@@ -214,7 +234,7 @@ func (u *usecase) Show(postID uint) (RespPost, error) {
 func (u *usecase) CountUpStar(request StarCountRequest) (StarCountResponse, error) {
 	var post *model.Post
 	response := StarCountResponse{}
-	post, err := u.repository.FindPostByID(request.ID)
+	_, post, err := u.repository.FindPostByID(request.ID)
 	if err == gorm.ErrRecordNotFound {
 		response.TypeOfStatusCode = http.StatusNotFound
 		return response, errors.New("the post does not exist")
@@ -265,7 +285,7 @@ func (u *usecase) CountUpStar(request StarCountRequest) (StarCountResponse, erro
 func (u *usecase) CountDownStar(request StarCountRequest) (StarCountResponse, error) {
 	var post *model.Post
 	response := StarCountResponse{}
-	post, err := u.repository.FindPostByID(request.ID)
+	_, post, err := u.repository.FindPostByID(request.ID)
 	if err == gorm.ErrRecordNotFound {
 		response.TypeOfStatusCode = http.StatusNotFound
 		return response, errors.New("The outfit does not exist")
@@ -320,7 +340,7 @@ func (u *usecase) UploadImages(request UploadImagesRequest) (UploadImagesRespons
 
 func (u *usecase) Update(r UpdateRequest, ctxUser model.User) (RespPost, error) {
 	var err error
-	post, err := u.repository.FindPostByID(r.ID)
+	user, post, err := u.repository.FindPostByID(r.ID)
 	if err != nil {
 		return RespPost{}, utils.ErrorsWrap(err, "repository.FindPostByID() error")
 	}
@@ -336,7 +356,7 @@ func (u *usecase) Update(r UpdateRequest, ctxUser model.User) (RespPost, error) 
 	}
 	return RespPost{
 		ID:        post.ID,
-		UserID:    post.UserID,
+		User:      user,
 		Caption:   post.Caption,
 		CreatedAt: post.CreatedAt,
 	}, nil
@@ -345,7 +365,7 @@ func (u *usecase) Update(r UpdateRequest, ctxUser model.User) (RespPost, error) 
 func (u *usecase) Delete(postID uint, ctxUser model.User) error {
 	var err error
 	if ctxUser.Role != "s_admin" {
-		post, err := u.repository.FindPostByID(postID)
+		_, post, err := u.repository.FindPostByID(postID)
 		if err != nil {
 			return utils.ErrorsWrap(err, "repository.FindPostByID() error")
 		}
@@ -370,6 +390,151 @@ func (u *usecase) Delete(postID uint, ctxUser model.User) error {
 	err = u.repository.DeleteRelatedPostImages(postID, tx)
 	if err != nil {
 		return utils.ErrorsWrap(err, "repository.DeleteRelatePostImages() error")
+	}
+	return nil
+}
+
+//===========================================
+//==================COMMENT==================
+//===========================================
+
+func (u *usecase) CommentCreate(r CreateCommentRequest) (uint, error) {
+	comment := &model.Comment{UserID: r.UserID, PostID: r.PostID, Content: r.Content, StarCount: &model.StarCount{Quantity: 0}}
+	err := u.repository.CreateComment(comment)
+	if err != nil {
+		return 0, err
+	}
+	return comment.ID, nil
+}
+
+func (u *usecase) CommentCountUpStar(request StarCountRequest) (StarCountResponse, error) {
+	var comment *model.Comment
+	response := StarCountResponse{}
+	comment, err := u.repository.FindCommentByID(request.ID)
+	if err == gorm.ErrRecordNotFound {
+		response.TypeOfStatusCode = http.StatusNotFound
+		return response, errors.New("the comment does not exist")
+	} else if err != nil {
+		return response, utils.ErrorsWrap(err, "repository.FindCommentByID error")
+	}
+
+	tx := u.db.Begin()
+	commentStar, err := u.repository.FindCommentStar(request.UserID, request.ID)
+	switch {
+	case err == nil && commentStar.DeletedAt == nil:
+		response.TypeOfStatusCode = http.StatusBadRequest
+		tx.Rollback()
+		return response, errors.New("Can't tap star many time")
+	case err == gorm.ErrRecordNotFound:
+		_, err = u.repository.CreateCommentStar(request.UserID, request.ID, tx)
+		if err != nil {
+			tx.Rollback()
+			return response, utils.ErrorsWrap(err, "repository.CreateCommentStar() error")
+		}
+		break
+	case commentStar.DeletedAt != nil:
+		_, err = u.repository.RestoreCommentStar(request.UserID, request.ID, tx)
+		if err != nil {
+			tx.Rollback()
+			return response, utils.ErrorsWrap(err, "repository.RestoreCommentStar() error")
+		}
+		break
+	default:
+		return response, utils.ErrorsWrap(err, "repository.FindCommentStar() error")
+	}
+
+	_, err = u.repository.FindCommentStarCount(*comment)
+	if err != nil {
+		tx.Rollback()
+		return response, utils.ErrorsWrap(err, "repository.FindCommentStarCount() error")
+	}
+	starCount, err := u.repository.UpdateCommentStarCount(upUnit, request.ID, tx)
+	if err != nil {
+		tx.Rollback()
+		return response, utils.ErrorsWrap(err, "repository.UpdateCommentStarCount() error")
+	}
+	response.StarCount = starCount
+	tx.Commit()
+	return response, err
+}
+
+func (u *usecase) CommentCountDownStar(request StarCountRequest) (StarCountResponse, error) {
+	var comment *model.Comment
+	response := StarCountResponse{}
+	comment, err := u.repository.FindCommentByID(request.ID)
+	if err == gorm.ErrRecordNotFound {
+		response.TypeOfStatusCode = http.StatusNotFound
+		return response, errors.New("The outfit does not exist")
+	} else if err != nil {
+		return response, utils.ErrorsWrap(err, "repository.FindCommentByID error")
+	}
+	commentStarCount, err := u.repository.FindCommentStarCount(*comment)
+	if err == gorm.ErrRecordNotFound || (err == nil && commentStarCount.Quantity == defaultStarCount) {
+		response.TypeOfStatusCode = http.StatusBadRequest
+		return response, errors.New("The outfit has no stars")
+	} else if err != nil {
+		return response, utils.ErrorsWrap(err, "repository.FindCommentStarCount error")
+	}
+
+	commentStar, err := u.repository.FindCommentStar(request.UserID, request.ID)
+	if err == gorm.ErrRecordNotFound || commentStar.DeletedAt != nil {
+		response.TypeOfStatusCode = http.StatusBadRequest
+		return response, errors.New("User has not tapped or untapped the star before")
+	} else if err != nil {
+		return response, utils.ErrorsWrap(err, "repository.FindCommentStar error")
+	}
+
+	tx := u.db.Begin()
+	starCount, err := u.repository.UpdateCommentStarCount(downUnit, request.ID, tx)
+	if err != nil {
+		tx.Rollback()
+		return response, utils.ErrorsWrap(err, "repository.UpdateCommentStarCount error")
+	}
+	_, err = u.repository.DeleteCommentStar(request.UserID, request.ID, tx)
+	if err != nil {
+		tx.Rollback()
+		return response, utils.ErrorsWrap(err, "repository.DeleteCommentStar error")
+	}
+
+	tx.Commit()
+	response.StarCount = starCount
+	return response, err
+}
+
+func (u *usecase) CommentUpdate(r UpdateCommentRequest, ctxUser model.User) error {
+	var err error
+	comment, err := u.repository.FindCommentByID(r.ID)
+	if err != nil {
+		return utils.ErrorsWrap(err, "repository.FindCommentByID() error")
+	}
+	if ctxUser.Role != "s_admin" {
+		if comment.UserID != ctxUser.ID {
+			return utils.ErrorsNew("Forbbiden to update the comment")
+		}
+	}
+	comment.Content = r.Content
+	err = u.repository.UpdateComment(comment)
+	if err != nil {
+		return utils.ErrorsWrap(err, "repository.UpdateComment() error")
+	}
+	return nil
+}
+
+func (u *usecase) CommentDelete(commentID uint, ctxUser model.User) error {
+	var err error
+	if ctxUser.Role != "s_admin" {
+		comment, err := u.repository.FindCommentByID(commentID)
+		if err != nil {
+			return utils.ErrorsWrap(err, "repository.FindCommentByID() error")
+		}
+		if comment.UserID != ctxUser.ID {
+			return utils.ErrorsNew("Forbbiden to delete the comment")
+		}
+	}
+
+	err = u.repository.DeleteComment(commentID)
+	if err != nil {
+		return utils.ErrorsWrap(err, "repository.DeleteComment() error")
 	}
 	return nil
 }

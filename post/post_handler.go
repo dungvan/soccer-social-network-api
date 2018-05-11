@@ -18,6 +18,10 @@ type HTTPHandler struct {
 	usecase Usecase
 }
 
+//===========================================
+//====================POST===================
+//===========================================
+
 // Index handler
 func (h *HTTPHandler) Index(w http.ResponseWriter, r *http.Request) {
 	request := &IndexRequest{}
@@ -304,6 +308,153 @@ func (h *HTTPHandler) UploadImages(w http.ResponseWriter, r *http.Request) {
 // UploadVideos fot a post
 func (h *HTTPHandler) UploadVideos(w http.ResponseWriter, r *http.Request) {
 
+}
+
+//===========================================
+//==================COMMENT==================
+//===========================================
+
+// CommentCreate a comment Handler
+func (h *HTTPHandler) CommentCreate(w http.ResponseWriter, r *http.Request) {
+	// mapping comment to struct.
+	request := CreateRequest{}
+	messages, err := h.ParseJSON(r, &request)
+	if len(messages) != 0 {
+		common := utils.CommonResponse{Message: "validation error.", Errors: messages}
+		h.StatusBadRequest(w, common)
+		return
+	}
+	if err != nil {
+		common := utils.CommonResponse{Message: "internal server error.", Errors: nil}
+		h.StatusServerError(w, common)
+		return
+	}
+	request.UserID = auth.GetUserFromContext(r.Context()).ID
+	// validate get data.
+	if err = h.Validate(w, request); err != nil {
+		return
+	}
+
+	commentID, err := h.usecase.Create(request)
+	if err != nil {
+		h.Logger.WithFields(logrus.Fields{
+			"error": err,
+		}).Error("usecase.Create() error")
+		common := utils.CommonResponse{Message: "internal server error.", Errors: nil}
+		h.StatusServerError(w, common)
+		return
+	}
+	h.ResponseJSON(w, CreateResponse{commentID})
+}
+
+// CommentUpStar increase the number of "star" about outfit.
+//
+// "First": to register to OutfitStarCount Outfit ID.
+// "Second": to register to CommentStarHistory Outfit ID and User ID.
+// "Finally": returns latest number of stars about specified outfit to the app.
+func (h *HTTPHandler) CommentUpStar(w http.ResponseWriter, r *http.Request) {
+	commentID, err := strconv.Atoi(chi.URLParam(r, "comment_id"))
+	request := StarCountRequest{}
+	request.ID = uint(commentID)
+	request.UserID = auth.GetUserFromContext(r.Context()).ID
+	response, err := h.usecase.CountUpStar(request)
+	if err != nil {
+		h.Logger.WithFields(logrus.Fields{
+			"error": err,
+		}).Error("usecase.CountUpStar() error")
+		if response.TypeOfStatusCode == http.StatusBadRequest {
+			common := utils.CommonResponse{Message: "Bad request error response", Errors: []string{err.Error()}}
+			h.StatusBadRequest(w, common)
+			return
+		}
+		if response.TypeOfStatusCode == http.StatusNotFound {
+			h.StatusNotFoundRequest(w, nil)
+			return
+		}
+		common := utils.CommonResponse{Message: "Internal server error response", Errors: []string{}}
+		h.StatusServerError(w, common)
+		return
+	}
+
+	h.ResponseJSON(w, response)
+}
+
+// CommentDeleteStar decrease the number of "star" about outfit
+//
+// "First": rewrites record of table “comment_star_history” with key column “id_user_app” and "id_outfit".
+// "Second": rewrites record of table “outfit_star_count” with key column "id_outfit".
+// "Finally": returns latest number of stars about specified outfit.
+func (h *HTTPHandler) CommentDeleteStar(w http.ResponseWriter, r *http.Request) {
+	commentID, err := strconv.Atoi(chi.URLParam(r, "comment_id"))
+	request := StarCountRequest{}
+	request.ID = uint(commentID)
+	request.UserID = auth.GetUserFromContext(r.Context()).ID
+	response, err := h.usecase.CountDownStar(request)
+	if err != nil {
+		h.Logger.WithFields(logrus.Fields{
+			"error": err,
+		}).Error("usecase.CountDownStar() error")
+		if response.TypeOfStatusCode == http.StatusBadRequest {
+			common := utils.CommonResponse{Message: "Bad request error response", Errors: []string{err.Error()}}
+			h.StatusBadRequest(w, common)
+			return
+		}
+		if response.TypeOfStatusCode == http.StatusNotFound {
+			h.StatusNotFoundRequest(w, nil)
+			return
+		}
+		common := utils.CommonResponse{Message: "Internal server error response", Errors: []string{}}
+		h.StatusServerError(w, common)
+		return
+	}
+	h.ResponseJSON(w, response)
+}
+
+// CommentUpdate handler
+func (h *HTTPHandler) CommentUpdate(w http.ResponseWriter, r *http.Request) {
+	commentID, _ := strconv.Atoi(chi.URLParam(r, "comment_id"))
+	request := &UpdateRequest{}
+	request.ID = uint(commentID)
+	messages, err := h.ParseJSON(r, request)
+	if len(messages) != 0 {
+		common := utils.CommonResponse{Message: "validation error.", Errors: messages}
+		h.StatusBadRequest(w, common)
+		return
+	}
+	if err != nil {
+		common := utils.CommonResponse{Message: "internal server error.", Errors: nil}
+		h.StatusServerError(w, common)
+		return
+	}
+
+	// validate get data.
+	if err = h.Validate(w, request); err != nil {
+		return
+	}
+	curUser := auth.GetUserFromContext(r.Context())
+	comment, err := h.usecase.Update(*request, curUser)
+
+	if err != nil {
+		common := utils.CommonResponse{Message: "Update failed", Errors: []string{err.Error()}}
+		h.StatusBadRequest(w, common)
+		return
+	}
+
+	h.ResponseJSON(w, comment)
+}
+
+// CommentDelete handler
+func (h *HTTPHandler) CommentDelete(w http.ResponseWriter, r *http.Request) {
+	id, _ := strconv.Atoi(chi.URLParam(r, "comment_id"))
+	curUser := auth.GetUserFromContext(r.Context())
+	if err := h.usecase.Delete(uint(id), curUser); err != nil {
+		common := utils.CommonResponse{Message: "Delete failed", Errors: []string{err.Error()}}
+		h.StatusServerError(w, common)
+		return
+	}
+
+	common := utils.CommonResponse{Message: "Delete success"}
+	h.ResponseJSON(w, common)
 }
 
 // NewHTTPHandler return new HTTPHandler instance.

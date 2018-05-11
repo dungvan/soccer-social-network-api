@@ -67,10 +67,11 @@ func (u *usecase) Show(matchID uint) (RespMatch, error) {
 			FirstName: mstUser.FirstName,
 			LastName:  mstUser.LastName,
 		},
-		Description: match.Description,
-		StartDate:   match.StartDate,
-		Team1ID:     match.Team1ID,
-		Team2ID:     match.Team2ID,
+		TournamentID: match.TournamentID,
+		Description:  match.Description,
+		StartDate:    match.StartDate,
+		Team1ID:      match.Team1ID,
+		Team2ID:      match.Team2ID,
 	}
 
 	return respMatchData, nil

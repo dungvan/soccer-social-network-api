@@ -11,6 +11,7 @@ type CreateResponse struct {
 type RespMatch struct {
 	TypeOfStatusCode int        `json:"-"`
 	ID               uint       `json:"id"`
+	TournamentID     *uint      `json:"tournament_id"`
 	Description      string     `json:"description"`
 	Master           RespMaster `json:"master"`
 	StartDate        time.Time  `json:"start_date"`

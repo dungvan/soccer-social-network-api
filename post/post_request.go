@@ -32,7 +32,7 @@ type UploadVideosRequest struct {
 // UpdateRequest struct
 type UpdateRequest struct {
 	ID      uint   `validate:"required"`
-	Caption string `validate:"retuired"`
+	Caption string `json:"caption" validate:"required"`
 }
 
 // StarCountRequest struct.
@@ -47,4 +47,21 @@ type Image struct {
 	MimeType string         `form:"image type" validate:"omitempty,eq=image/bmp|eq=image/dib|eq=image/jpeg|eq=image/jp2|eq=image/png|eq=image/webp|eq=image/x-portable-anymap|eq=image/x-portable-bitmap|eq=image/x-portable-graymap|eq=image/x-portable-pixmap|eq=image/x-cmu-raster|eq=image/tiff|eq=image/gif"`
 	Size     int64          `form:"image size" validate:"omitempty,gt=0,max=10485760"`
 	Name     string
+}
+
+//===========================================
+//==================COMMENT==================
+//===========================================
+
+// CreateCommentRequest struct
+type CreateCommentRequest struct {
+	Content string `json:"caption" validate:"required"`
+	PostID  uint   `json:"post_id" validate:"required"`
+	UserID  uint   `validate:"required"`
+}
+
+// UpdateCommentRequest struct
+type UpdateCommentRequest struct {
+	ID      uint   `validate:"required"`
+	Content string `json:"content" validate:"required"`
 }

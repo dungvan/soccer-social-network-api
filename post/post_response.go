@@ -18,13 +18,30 @@ type IndexResponse struct {
 
 // RespPost struct
 type RespPost struct {
-	TypeOfStatusCode int         `json:"-"`
-	ID               uint        `json:"id"`
-	UserID           uint        `json:"user_id"`
-	Caption          string      `json:"caption"`
-	ImageURLs        interface{} `json:"image_url"`
-	VideoURLs        interface{} `json:"video_url"`
-	CreatedAt        time.Time   `json:"created_at"`
+	TypeOfStatusCode int           `json:"-"`
+	ID               uint          `json:"id"`
+	User             RespUser      `json:"user"`
+	Caption          string        `json:"caption"`
+	ImageURLs        interface{}   `json:"image_url"`
+	VideoURLs        interface{}   `json:"video_url"`
+	CreatedAt        time.Time     `json:"created_at"`
+	StarCount        uint          `json:"star_count"`
+	Comments         []RespComment `json:"comments"`
+}
+
+// RespComment struct
+type RespComment struct {
+	ID      uint     `json:"id"`
+	Content string   `json:"content"`
+	User    RespUser `json:"user"`
+}
+
+// RespUser struct
+type RespUser struct {
+	ID        uint   `json:"id"`
+	UserName  string `json:"user_name"`
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
 }
 
 // StarCountResponse responses from CountUpStar and CountDownStar function.
