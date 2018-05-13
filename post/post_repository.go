@@ -65,7 +65,7 @@ type Repository interface {
 	// GetAllCommentsByPostID return all of comment record
 	GetAllCommentsByPostID(postID uint) ([]Comment, error)
 	// CreateComment registers record to table comment
-	CreateComment(comment *model.Comment) error
+	CreateComment(comment *model.Comment) (RespUser, error)
 	// FindCommentStarHistory find CommentStar contain record has deleted_at != null.
 	FindCommentStar(userID, commentID uint) (*model.CommentStar, error)
 	// FindCommentByID find a comment by id
@@ -102,14 +102,17 @@ func (r *repository) GetAllPost(page uint) (uint, []Post, error) {
 	var err error
 	posts := make([]Post, 0)
 	result := r.db.Model(&model.Post{}).
-		Select("posts.id, posts.user_id, posts.caption, posts.created_at, users.user_name, users.first_name, users.last_name").
-		Joins(`INNER JOIN users ON (users.deleted_at IS NULL AND posts.user_id = users.id)`)
+		Select("users.user_name, users.first_name, users.last_name, posts.id, posts.user_id, posts.caption, posts.created_at, COALESCE (star_counts.quantity,0) AS star_count, post_stars.id, CASE WHEN post_stars.id IS NOT NULL THEN true ELSE false END AS star_flag").
+		Joins(`JOIN users ON (posts.user_id = users.id AND users.deleted_at IS NULL)`).
+		Joins(`JOIN star_counts ON (star_counts.owner_type = 'posts' AND star_counts.owner_id = posts.id AND star_counts.deleted_at IS NULL)`).
+		Joins(`LEFT JOIN post_stars ON (posts.id = post_stars.post_id AND post_stars.deleted_at IS NULL)`)
 	result.Count(&total)
 	if total <= pagingLimit*(page-1) {
 		return total, posts, gorm.ErrRecordNotFound
 	}
-	err = result.Offset(pagingLimit * (page - 1)).
-		Limit(pagingLimit).Order("id asc").
+	err = result.
+		Offset(pagingLimit * (page - 1)).
+		Limit(pagingLimit).Order("posts.created_at desc, posts.id desc").
 		Scan(&posts).Error
 	return total, posts, utils.ErrorsWrap(err, "can't get all posts")
 }
@@ -291,17 +294,27 @@ func (r *repository) DeleteRelatedPostImages(postID uint, transaction *gorm.DB) 
 func (r *repository) GetAllCommentsByPostID(postID uint) ([]Comment, error) {
 	comments := make([]Comment, 0)
 	err := r.db.Model(&model.Comment{}).
-		Select("comments.id, comments.user_id, users.user_name, users.first_name, users.last_name, comments.content, comments.created_at").
-		Joins(`INNER JOIN users ON (comments.user_id = users.id AND users.deleted_at IS NULL AND comments.post_id = ?)`, postID).
+		Select("comments.id, comments.user_id, users.user_name, users.first_name, users.last_name, comments.content, comments.created_at, COALESCE (star_counts.quantity,0) AS star_count, comment_stars.id, CASE WHEN comment_stars.id IS NOT NULL THEN true ELSE false END AS star_flag").
+		Joins(`JOIN users ON (comments.user_id = users.id AND users.deleted_at IS NULL AND comments.post_id = ?)`, postID).
+		Joins(`JOIN star_counts ON (star_counts.owner_type = 'comments' AND star_counts.owner_id = comments.id AND star_counts.deleted_at IS NULL)`).
+		Joins(`LEFT JOIN comment_stars ON (comments.id = comment_stars.comment_id AND comment_stars.deleted_at IS NULL)`).
 		Limit(100).
 		Order("comments.created_at asc, comments.id asc").
 		Scan(&comments).Error
 	return comments, utils.ErrorsWrap(err, "can't get comment.")
 }
 
-func (r *repository) CreateComment(p *model.Comment) error {
-	result := r.db.Create(p)
-	return utils.ErrorsWrap(result.Error, "can't create comment")
+func (r *repository) CreateComment(c *model.Comment) (RespUser, error) {
+	err := r.db.Create(c).Error
+	if err != nil {
+		return RespUser{}, utils.ErrorsWrap(err, "can't create comment")
+	}
+	user := RespUser{}
+	err = r.db.Model(&model.User{}).Where("id = ?", c.UserID).Scan(&user).Error
+	if err != nil {
+		return RespUser{}, utils.ErrorsWrap(err, "can't create comment")
+	}
+	return user, err
 }
 
 func (r *repository) FindCommentStar(userID, commentID uint) (*model.CommentStar, error) {

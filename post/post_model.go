@@ -1,6 +1,10 @@
 package post
 
-import "time"
+import (
+	"time"
+
+	"github.com/dungvan2512/soccer-social-network-api/model"
+)
 
 // Comment struct table
 type Comment struct {
@@ -10,16 +14,17 @@ type Comment struct {
 	UserName  string
 	FirstName string
 	LastName  string
+	StarCount uint
+	StarFlag  bool
 	CreatedAt time.Time
 }
 
 // Post struct table
 type Post struct {
-	ID        uint
-	Caption   string
-	UserID    uint
+	*model.Post
 	UserName  string
 	FirstName string
 	LastName  string
-	CreatedAt time.Time
+	StarCount uint
+	StarFlag  bool
 }

@@ -342,7 +342,7 @@ func (h *HTTPHandler) CommentCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	commentID, err := h.usecase.CommentCreate(request)
+	resp, err := h.usecase.CommentCreate(request)
 	if err != nil {
 		h.Logger.WithFields(logrus.Fields{
 			"error": err,
@@ -351,7 +351,7 @@ func (h *HTTPHandler) CommentCreate(w http.ResponseWriter, r *http.Request) {
 		h.StatusServerError(w, common)
 		return
 	}
-	h.ResponseJSON(w, CreateCommentResponse{commentID})
+	h.ResponseJSON(w, resp)
 }
 
 // CommentUpStar increase the number of "star" about post.

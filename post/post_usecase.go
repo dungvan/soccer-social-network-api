@@ -42,7 +42,8 @@ type Usecase interface {
 	//==================COMMENT==================
 	//===========================================
 
-	CommentCreate(r CreateCommentRequest) (uint, error)
+	CommentIndexByPostID(postID uint) ([]RespComment, error)
+	CommentCreate(r CreateCommentRequest) (RespComment, error)
 	CommentCountUpStar(request StarCountRequest) (StarCountResponse, error)
 	CommentCountDownStar(request StarCountRequest) (StarCountResponse, error)
 	CommentUpdate(r UpdateCommentRequest, ctxUser model.User) error
@@ -66,26 +67,54 @@ func (u *usecase) Index(page uint) (IndexResponse, error) {
 	if err != nil {
 		return IndexResponse{Total: total, Posts: []RespPost{}}, utils.ErrorsWrap(err, "repository.GetAllPost() error")
 	}
-	response := IndexResponse{
-		Total: total,
-		Posts: func() []RespPost {
-			respUsers := make([]RespPost, 0)
-			for _, post := range posts {
-				respUsers = append(respUsers, RespPost{
-					ID: post.ID,
-					User: RespUser{
-						ID:        post.UserID,
-						UserName:  post.UserName,
-						FirstName: post.FirstName,
-						LastName:  post.LastName,
-					},
-					Caption:   post.Caption,
-					CreatedAt: post.CreatedAt,
-				})
-			}
-			return respUsers
-		}(),
+	response := IndexResponse{}
+	response.Posts = make([]RespPost, 0)
+	bucketName := infrastructure.GetConfigString("objectstorage.bucketname")
+	for _, post := range posts {
+		err = u.repository.GetRelatedPostImages(post.Post)
+		if err != nil {
+			utils.ErrorsWrap(err, "repository.GetRelatedPostImages() error")
+		}
+
+		comments, err := u.CommentIndexByPostID(post.ID)
+		if err != nil {
+			return IndexResponse{Total: total, Posts: []RespPost{}}, utils.ErrorsWrap(err, "repository.GetUserByID() error")
+		}
+		data := RespPost{
+			ID:        post.ID,
+			StarCount: post.StarCount,
+			StarFlag:  post.StarFlag,
+			User: RespUser{
+				ID:        post.UserID,
+				UserName:  post.UserName,
+				FirstName: post.FirstName,
+				LastName:  post.LastName,
+			},
+			Caption: post.Caption,
+			ImageURLs: func() []interface{} {
+				output := []interface{}{}
+				if post.Images != nil && len(post.Images) > 0 {
+					for _, image := range post.Images {
+						imageurl := utils.GetStorageURL(infrastructure.Storage, infrastructure.Endpoint, infrastructure.Secure, bucketName, utils.GetObjectPath(infrastructure.Storage, s3ImagePath, image.Name), infrastructure.Region)
+						output = append(output, imageurl)
+					}
+				}
+				return output
+			}(),
+			VideoURLs: func() []interface{} {
+				output := []interface{}{}
+				// for _, videoName := range post.SourceImageFileName {
+				// 	videourl := utils.GetStorageURL(infrastructure.Storage, infrastructure.Endpoint, infrastructure.Secure, bucketName, utils.GetObjectPath(infrastructure.Storage, S3ImagePath, videoName), infrastructure.Region)
+				// 	output = append(output, videourl)
+				// }
+				return output
+			}(),
+			Comments:  comments,
+			CreatedAt: post.CreatedAt,
+		}
+		response.Posts = append(response.Posts, data)
 	}
+	response.Total = total
 	return response, err
 }
 
@@ -245,6 +274,7 @@ func (u *usecase) Show(postID uint) (RespPost, error) {
 						FirstName: comment.FirstName,
 						LastName:  comment.LastName,
 					},
+					CreatedAt: comment.CreatedAt,
 				})
 			}
 		}
@@ -421,13 +451,44 @@ func (u *usecase) Delete(postID uint, ctxUser model.User) error {
 //==================COMMENT==================
 //===========================================
 
-func (u *usecase) CommentCreate(r CreateCommentRequest) (uint, error) {
-	comment := &model.Comment{UserID: r.UserID, PostID: r.PostID, Content: r.Content, StarCount: &model.StarCount{Quantity: 0}}
-	err := u.repository.CreateComment(comment)
+func (u *usecase) CommentIndexByPostID(postID uint) ([]RespComment, error) {
+	comments, err := u.repository.GetAllCommentsByPostID(postID)
 	if err != nil {
-		return 0, err
+		return []RespComment{}, utils.ErrorsWrap(err, "u.repository.GetAllCommentsByPostID() error")
 	}
-	return comment.ID, nil
+	resp := make([]RespComment, 0)
+	for _, comment := range comments {
+		resp = append(resp, RespComment{
+			ID:        comment.ID,
+			PostID:    postID,
+			Content:   comment.Content,
+			StarCount: comment.StarCount,
+			StarFlag:  comment.StarFlag,
+			CreatedAt: comment.CreatedAt,
+			User: RespUser{
+				ID:        comment.UserID,
+				FirstName: comment.FirstName,
+				LastName:  comment.LastName,
+				UserName:  comment.UserName,
+			},
+		})
+	}
+	return resp, nil
+}
+
+func (u *usecase) CommentCreate(r CreateCommentRequest) (RespComment, error) {
+	comment := &model.Comment{UserID: r.UserID, PostID: r.PostID, Content: r.Content, StarCount: &model.StarCount{Quantity: 0}}
+	user, err := u.repository.CreateComment(comment)
+	if err != nil {
+		return RespComment{}, err
+	}
+	return RespComment{
+		ID:        comment.ID,
+		PostID:    comment.PostID,
+		Content:   comment.Content,
+		User:      user,
+		CreatedAt: comment.CreatedAt,
+	}, nil
 }
 
 func (u *usecase) CommentCountUpStar(request StarCountRequest) (StarCountResponse, error) {

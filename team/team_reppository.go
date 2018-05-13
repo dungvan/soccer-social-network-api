@@ -127,7 +127,7 @@ func (r *repository) UpdateTeam(team *model.Team, transaction *gorm.DB) error {
 }
 
 func (r *repository) DeleteTeam(teamID uint, transaction *gorm.DB) error {
-	return utils.ErrorsWrap(transaction.Where("i = ?", teamID).Delete(&model.Team{}).Error, "can't delete team")
+	return utils.ErrorsWrap(transaction.Where("id = ?", teamID).Delete(&model.Team{}).Error, "can't delete team")
 }
 
 func (r *repository) DeleteTeamMaster(teamID uint, transaction *gorm.DB) error {

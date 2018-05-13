@@ -22,23 +22,30 @@ type RespPost struct {
 	ID               uint          `json:"id"`
 	User             RespUser      `json:"user"`
 	Caption          string        `json:"caption"`
-	ImageURLs        interface{}   `json:"image_url"`
-	VideoURLs        interface{}   `json:"video_url"`
+	ImageURLs        interface{}   `json:"image_urls"`
+	VideoURLs        interface{}   `json:"video_urls"`
 	CreatedAt        time.Time     `json:"created_at"`
 	StarCount        uint          `json:"star_count"`
 	Comments         []RespComment `json:"comments"`
+	StarFlag         bool          `json:"star_flag"`
 }
 
 // CreateCommentResponse struct
 type CreateCommentResponse struct {
-	CommentID uint `json:"comment_id"`
+	ID     uint     `json:"id"`
+	PostID uint     `json:"post_id"`
+	User   RespUser `json:"user"`
 }
 
 // RespComment struct
 type RespComment struct {
-	ID      uint     `json:"id"`
-	Content string   `json:"content"`
-	User    RespUser `json:"user"`
+	ID        uint      `json:"id"`
+	PostID    uint      `json:"post_id"`
+	Content   string    `json:"content"`
+	StarCount uint      `json:"star_count"`
+	StarFlag  bool      `json:"star_flag"`
+	User      RespUser  `json:"user"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 // RespUser struct

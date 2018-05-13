@@ -90,7 +90,7 @@ func (r *Router) SetupHandler() {
 			cr.Get("/", ph.Show)
 			cr.Post("/star", ph.UpStar)
 			cr.Delete("/star", ph.DeleteStar)
-			cr.Route("/comment", func(cr chi.Router) {
+			cr.Route("/comments", func(cr chi.Router) {
 				cr.Post("/", ph.CommentCreate)
 				cr.Route("/{comment_id:0*([1-9])([0-9]?)+}", func(cr chi.Router) {
 					cr.Delete("/", ph.CommentDelete)
