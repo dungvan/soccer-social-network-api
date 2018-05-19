@@ -93,7 +93,7 @@ func (r *repository) GetAllUser(page uint) (uint, []model.User, error) {
 	var err error
 	users := make([]model.User, 0)
 	result := r.db.Model(&model.User{}).
-		Select("id, user_name, email, role")
+		Select("id, user_name, email, first_name, last_name, role")
 	result.Count(&total)
 	if total <= pagingLimit*(page-1) {
 		return total, users, gorm.ErrRecordNotFound
