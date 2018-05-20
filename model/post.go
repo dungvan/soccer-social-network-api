@@ -10,6 +10,7 @@ type Post struct {
 	UserID    uint
 	Caption   string
 	Location  *Location
+	Type      string
 	Hashtags  []Hashtag  `gorm:"many2many:post_hashtags"`
 	Stars     []Star     `gorm:"many2many:post_stars"`
 	StarCount *StarCount `gorm:"polymorphic:Owner"`

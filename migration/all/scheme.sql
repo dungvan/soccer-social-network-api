@@ -67,6 +67,7 @@ CREATE TABLE "posts"
 	user_id int NOT NULL,
 	caption text,
 	location_id int,
+	"type" varchar(20),
 	created_at timestamp,
 	updated_at timestamp,
 	deleted_at timestamp,

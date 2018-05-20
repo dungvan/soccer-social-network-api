@@ -102,7 +102,7 @@ func (r *repository) GetAllPost(page uint) (uint, []Post, error) {
 	var err error
 	posts := make([]Post, 0)
 	result := r.db.Model(&model.Post{}).
-		Select("users.user_name, users.first_name, users.last_name, posts.id, posts.user_id, posts.caption, posts.created_at, COALESCE (star_counts.quantity,0) AS star_count, post_stars.id, CASE WHEN post_stars.id IS NOT NULL THEN true ELSE false END AS star_flag").
+		Select("users.user_name, users.first_name, users.last_name, posts.id, posts.user_id, posts.caption, posts.type, posts.created_at, COALESCE (star_counts.quantity,0) AS star_count, post_stars.id, CASE WHEN post_stars.id IS NOT NULL THEN true ELSE false END AS star_flag").
 		Joins(`JOIN users ON (posts.user_id = users.id AND users.deleted_at IS NULL)`).
 		Joins(`JOIN star_counts ON (star_counts.owner_type = 'posts' AND star_counts.owner_id = posts.id AND star_counts.deleted_at IS NULL)`).
 		Joins(`LEFT JOIN post_stars ON (posts.id = post_stars.post_id AND post_stars.deleted_at IS NULL)`)

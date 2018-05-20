@@ -11,10 +11,11 @@ type IndexRequest struct {
 
 // CreateRequest struct
 type CreateRequest struct {
-	Caption  string   `json:"caption" validate:"required_if=Images|required_if=Videos"`
+	Caption  string   `json:"caption" validate:"required_if=Images"`
 	Images   []string `json:"image_names" validate:"omitempty,dive,gt=0,image_name"`
 	Videos   []string `json:"video_names" validate:"omitempty,dive,gt=0,video_name"`
 	PlaceID  string   `json:"place_id" validate:"omitempty,lt=257"`
+	Type     string   `json:"type" validate:"required,eq=status|eq=talent-wanted"`
 	Tags     []string `json:"tags" validate:"omitempty,max_array_len=30,dive,gt=0"`
 	Hashtags []string `json:"hashtags" validate:"omitempty,max_array_len=30,dive,gt=0,lt=100,hashtag"`
 	UserID   uint     `validate:"required"`

@@ -84,6 +84,7 @@ func (u *usecase) Index(page uint) (IndexResponse, error) {
 			ID:        post.ID,
 			StarCount: post.StarCount,
 			StarFlag:  post.StarFlag,
+			Type:      post.Type,
 			User: RespUser{
 				ID:        post.UserID,
 				UserName:  post.UserName,
@@ -136,6 +137,7 @@ func (u *usecase) GetByUserID(userID uint) (IndexResponse, error) {
 			ID:      post.ID,
 			User:    postUser,
 			Caption: post.Caption,
+			Type:    post.Type,
 			ImageURLs: func() []interface{} {
 				output := []interface{}{}
 				if post.Images != nil && len(post.Images) > 0 {
@@ -172,7 +174,7 @@ func (u *usecase) Create(r CreateRequest) (uint, error) {
 			tx.Commit()
 		}
 	}()
-	post := &model.Post{UserID: r.UserID, Caption: r.Caption, StarCount: &model.StarCount{Quantity: 0}}
+	post := &model.Post{UserID: r.UserID, Caption: r.Caption, Type: r.Type, StarCount: &model.StarCount{Quantity: 0}}
 
 	if r.PlaceID != "" {
 
@@ -236,6 +238,7 @@ func (u *usecase) Show(postID uint) (RespPost, error) {
 	response.Caption = post.Caption
 	response.User = user
 	response.CreatedAt = post.CreatedAt
+	response.Type = post.Type
 	response.ImageURLs = func() []interface{} {
 		output := []interface{}{}
 		if post.Images != nil && len(post.Images) > 0 {
@@ -380,13 +383,15 @@ func (u *usecase) CountDownStar(request StarCountRequest) (StarCountResponse, er
 
 func (u *usecase) UploadImages(request UploadImagesRequest) (UploadImagesResponse, error) {
 	response := UploadImagesResponse{[]string{}}
+	bucketName := infrastructure.GetConfigString("objectstorage.bucketname")
 	for index, image := range request.Images {
 		err := u.repository.AddImageToS3(image, s3ImagePath)
 		if err != nil {
 			utils.ErrorsWrap(err, "can't upload file "+string(index)+" to S3")
 			continue
 		}
-		response.ImageNames = append(response.ImageNames, image.Name)
+		url := utils.GetStorageURL(infrastructure.Storage, infrastructure.Endpoint, infrastructure.Secure, bucketName, utils.GetObjectPath(infrastructure.Storage, s3ImagePath, image.Name), infrastructure.Region)
+		response.ImageNames = append(response.ImageNames, url)
 	}
 	return response, nil
 }
@@ -410,6 +415,7 @@ func (u *usecase) Update(r UpdateRequest, ctxUser model.User) (RespPost, error) 
 	return RespPost{
 		ID:        post.ID,
 		User:      user,
+		Type:      post.Type,
 		Caption:   post.Caption,
 		CreatedAt: post.CreatedAt,
 	}, nil

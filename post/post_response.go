@@ -22,6 +22,7 @@ type RespPost struct {
 	ID               uint          `json:"id"`
 	User             RespUser      `json:"user"`
 	Caption          string        `json:"caption"`
+	Type             string        `json:"type"`
 	ImageURLs        interface{}   `json:"image_urls"`
 	VideoURLs        interface{}   `json:"video_urls"`
 	CreatedAt        time.Time     `json:"created_at"`

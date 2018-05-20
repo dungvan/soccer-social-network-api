@@ -251,7 +251,7 @@ func (h *HTTPHandler) UploadImages(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	fileMap := r.MultipartForm.File
-	fileHeaders := fileMap["image_files"]
+	fileHeaders := fileMap["imageFiles"]
 
 	if fileHeaders != nil {
 		request.Images = []Image{}
@@ -305,7 +305,7 @@ func (h *HTTPHandler) UploadImages(w http.ResponseWriter, r *http.Request) {
 		h.StatusServerError(w, common)
 		return
 	}
-	h.ResponseJSON(w, response)
+	h.ResponseJSON(w, response.ImageNames)
 }
 
 // UploadVideos fot a post
@@ -452,14 +452,13 @@ func (h *HTTPHandler) CommentUpdate(w http.ResponseWriter, r *http.Request) {
 
 // CommentDelete handler
 func (h *HTTPHandler) CommentDelete(w http.ResponseWriter, r *http.Request) {
-	id, _ := strconv.Atoi(chi.URLParam(r, "comment_id"))
+	commentID, _ := strconv.Atoi(chi.URLParam(r, "comment_id"))
 	curUser := auth.GetUserFromContext(r.Context())
-	if err := h.usecase.Delete(uint(id), curUser); err != nil {
+	if err := h.usecase.CommentDelete(uint(commentID), curUser); err != nil {
 		common := utils.CommonResponse{Message: "Delete failed", Errors: []string{err.Error()}}
 		h.StatusServerError(w, common)
 		return
 	}
-
 	common := utils.CommonResponse{Message: "Delete success"}
 	h.ResponseJSON(w, common)
 }

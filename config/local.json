@@ -27,7 +27,7 @@
     },
     "objectstorage": {
         "storage": "minio",
-        "endpoint": "7418ddd8.ngrok.io",
+        "endpoint": "202a54e5.ngrok.io",
         "region": "ap-northeast-1",
         "bucketname": "soccer-social-network-api",
         "accesskey": "DUNGVANEXAMPLE",
