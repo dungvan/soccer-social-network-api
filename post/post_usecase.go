@@ -20,9 +20,9 @@ type Usecase interface {
 	//===========================================
 
 	// Index usecase
-	Index(userID uint) (IndexResponse, error)
+	Index(userID, page uint) (IndexResponse, error)
 	// GetByUserID usecase
-	GetByUserID(userID uint) (IndexResponse, error)
+	GetByUserID(userIDCreate, userIDCall, page uint) (IndexResponse, error)
 	// Create a post
 	Create(CreateRequest) (postID uint, err error)
 	// Show a post
@@ -56,11 +56,11 @@ type usecase struct {
 	repository Repository
 }
 
-func (u *usecase) Index(page uint) (IndexResponse, error) {
+func (u *usecase) Index(userID, page uint) (IndexResponse, error) {
 	if page < 1 {
 		page = 1
 	}
-	total, posts, err := u.repository.GetAllPost(page)
+	total, posts, err := u.repository.GetAllPost(userID, page)
 	if err == gorm.ErrRecordNotFound {
 		return IndexResponse{Posts: []RespPost{}}, nil
 	}
@@ -119,9 +119,9 @@ func (u *usecase) Index(page uint) (IndexResponse, error) {
 	return response, err
 }
 
-func (u *usecase) GetByUserID(userID uint) (IndexResponse, error) {
+func (u *usecase) GetByUserID(userIDCreate, userIDCall, page uint) (IndexResponse, error) {
 	indexResp := IndexResponse{}
-	postUser, result, err := u.repository.GetAllPostsByUserID(userID)
+	total, result, err := u.repository.GetAllPostsByUserID(userIDCreate, userIDCall, page)
 	if err != nil {
 		return indexResp, utils.ErrorsWrap(err, "repository.GetAllPostsByUserID() error.")
 	}
@@ -129,13 +129,18 @@ func (u *usecase) GetByUserID(userID uint) (IndexResponse, error) {
 
 	bucketName := infrastructure.GetConfigString("objectstorage.bucketname")
 	for _, post := range result {
-		err = u.repository.GetRelatedPostImages(&post)
+		err = u.repository.GetRelatedPostImages(post.Post)
 		if err != nil {
 			utils.ErrorsWrap(err, "repository.GetRelatedPostImages() error")
 		}
 		data := RespPost{
-			ID:      post.ID,
-			User:    postUser,
+			ID: post.ID,
+			User: RespUser{
+				ID:        post.UserID,
+				UserName:  post.UserName,
+				FirstName: post.FirstName,
+				LastName:  post.LastName,
+			},
 			Caption: post.Caption,
 			Type:    post.Type,
 			ImageURLs: func() []interface{} {
@@ -160,7 +165,7 @@ func (u *usecase) GetByUserID(userID uint) (IndexResponse, error) {
 		}
 		indexResp.Posts = append(indexResp.Posts, data)
 	}
-	indexResp.Total = uint(len(result))
+	indexResp.Total = total
 	return indexResp, err
 }
 

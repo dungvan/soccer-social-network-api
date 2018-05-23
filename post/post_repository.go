@@ -22,9 +22,9 @@ type Repository interface {
 	//=======================================
 
 	// GetAllPost return all post with pagination
-	GetAllPost(page uint) (total uint, posts []Post, err error)
+	GetAllPost(userID, page uint) (total uint, posts []Post, err error)
 	// GetAllPostsByUserID return all of post record
-	GetAllPostsByUserID(userID uint) (RespUser, []model.Post, error)
+	GetAllPostsByUserID(userIDCreate, userIDCall, page uint) (uint, []Post, error)
 	// CreatePost registers record to table post
 	CreatePost(post *model.Post, transaction *gorm.DB) error
 	// CreateHashtags is insert hashtag list into hashtag table if it does not exist.
@@ -97,7 +97,7 @@ type repository struct {
 //==================POST=================
 //=======================================
 
-func (r *repository) GetAllPost(page uint) (uint, []Post, error) {
+func (r *repository) GetAllPost(userID, page uint) (uint, []Post, error) {
 	var total uint
 	var err error
 	posts := make([]Post, 0)
@@ -105,7 +105,7 @@ func (r *repository) GetAllPost(page uint) (uint, []Post, error) {
 		Select("users.user_name, users.first_name, users.last_name, posts.id, posts.user_id, posts.caption, posts.type, posts.created_at, COALESCE (star_counts.quantity,0) AS star_count, post_stars.id, CASE WHEN post_stars.id IS NOT NULL THEN true ELSE false END AS star_flag").
 		Joins(`JOIN users ON (posts.user_id = users.id AND users.deleted_at IS NULL)`).
 		Joins(`JOIN star_counts ON (star_counts.owner_type = 'posts' AND star_counts.owner_id = posts.id AND star_counts.deleted_at IS NULL)`).
-		Joins(`LEFT JOIN post_stars ON (posts.id = post_stars.post_id AND post_stars.deleted_at IS NULL)`)
+		Joins(`LEFT JOIN post_stars ON (posts.id = post_stars.post_id AND post_stars.user_id = ? AND post_stars.deleted_at IS NULL)`, userID)
 	result.Count(&total)
 	if total <= pagingLimit*(page-1) {
 		return total, posts, gorm.ErrRecordNotFound
@@ -117,19 +117,24 @@ func (r *repository) GetAllPost(page uint) (uint, []Post, error) {
 	return total, posts, utils.ErrorsWrap(err, "can't get all posts")
 }
 
-func (r *repository) GetAllPostsByUserID(userID uint) (RespUser, []model.Post, error) {
-	posts := make([]model.Post, 0)
-	user := RespUser{ID: userID}
-	err := r.db.Model(&model.Post{}).
-		Select("id, user_id, caption, created_at").Where("user_id = ?", userID).
-		Limit(100).
-		Order("created_at desc, id desc").
-		Scan(&posts).Error
-	if err != nil {
-		return user, posts, utils.ErrorsWrap(err, "can't get post.")
+func (r *repository) GetAllPostsByUserID(userIDCreate, userIDCall, page uint) (uint, []Post, error) {
+	var total uint
+	var err error
+	posts := make([]Post, 0)
+	result := r.db.Model(&model.Post{}).
+		Select("users.user_name, users.first_name, users.last_name, posts.id, posts.user_id, posts.caption, posts.type, posts.created_at, COALESCE (star_counts.quantity,0) AS star_count, post_stars.id, CASE WHEN post_stars.id IS NOT NULL THEN true ELSE false END AS star_flag").
+		Joins(`JOIN users ON (posts.user_id = users.id AND users.id = ? AND users.deleted_at IS NULL)`, userIDCreate).
+		Joins(`JOIN star_counts ON (star_counts.owner_type = 'posts' AND star_counts.owner_id = posts.id AND star_counts.deleted_at IS NULL)`).
+		Joins(`LEFT JOIN post_stars ON (posts.id = post_stars.post_id AND post_stars.user_id = ? AND post_stars.deleted_at IS NULL)`, userIDCall)
+	result.Count(&total)
+	if total <= pagingLimit*(page-1) {
+		return total, posts, gorm.ErrRecordNotFound
 	}
-	err = r.db.Model(&model.User{}).Where("id = ?", userID).Scan(&user).Error
-	return user, posts, utils.ErrorsWrap(err, "can't get related post-user.")
+	err = result.
+		Offset(pagingLimit * (page - 1)).
+		Limit(pagingLimit).Order("posts.created_at desc, posts.id desc").
+		Scan(&posts).Error
+	return total, posts, utils.ErrorsWrap(err, "can't get all posts")
 }
 
 func (r *repository) CreatePost(p *model.Post, tx *gorm.DB) error {

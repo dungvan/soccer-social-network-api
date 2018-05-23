@@ -25,13 +25,14 @@ type HTTPHandler struct {
 // Index handler
 func (h *HTTPHandler) Index(w http.ResponseWriter, r *http.Request) {
 	request := &IndexRequest{}
+	userID := auth.GetUserFromContext(r.Context()).ID
 	h.ParseForm(r, request)
 	// validate get data.
 	if err := h.Validate(w, request); err != nil {
 		return
 	}
 
-	response, err := h.usecase.Index(request.Page)
+	response, err := h.usecase.Index(userID, request.Page)
 	if err != nil {
 		h.Logger.WithFields(logrus.Fields{
 			"error": err,
@@ -54,8 +55,15 @@ func (h *HTTPHandler) Index(w http.ResponseWriter, r *http.Request) {
 
 // GetByUserID handler
 func (h *HTTPHandler) GetByUserID(w http.ResponseWriter, r *http.Request) {
-	userID, _ := strconv.Atoi(chi.URLParam(r, "id"))
-	resp, err := h.usecase.GetByUserID(uint(userID))
+	request := &IndexRequest{}
+	h.ParseForm(r, request)
+	// validate get data.
+	if err := h.Validate(w, request); err != nil {
+		return
+	}
+	userIDCreate, _ := strconv.Atoi(chi.URLParam(r, "id"))
+	userIDCall := auth.GetUserFromContext(r.Context()).ID
+	resp, err := h.usecase.GetByUserID(uint(userIDCreate), userIDCall, request.Page)
 	if err != nil {
 		h.Logger.WithFields(logrus.Fields{
 			"error": err,
