@@ -13,10 +13,10 @@
     },
     "database": {
         "dbms": "postgres",
-        "host": "develop-circle-db.cq7hzn6hnus4.ap-northeast-1.rds.amazonaws.com",
+        "host": "soccer-social-network.cbbdmhwd0bp0.us-east-1.rds.amazonaws.com",
         "user": "devdbmaster",
-        "pass": "AQP;vOpC26r]GQHF",
-        "name": "circle",
+        "pass": "dungvan123",
+        "name": "ssn",
         "port": "5432",
         "logmode": true
     },
@@ -28,8 +28,8 @@
     "objectstorage": {
         "storage": "s3",
         "endpoint": "s3.amazonaws.com",
-        "region": "ap-northeast-1",
-        "bucketname": "ap-northeast-1-develop-circle-ml-photo",
+        "region": "ap-southeast-1",
+        "bucketname": "soccer-social-network",
         "accesskey": "",
         "secretkey": "",
         "secure": true

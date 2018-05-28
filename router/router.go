@@ -66,16 +66,18 @@ func (r *Router) SetupHandler() {
 	r.Mux.Route("/users", func(cr chi.Router) {
 		cr.Post("/register", uh.Register)
 		cr.Post("/login", uh.Login)
-		cr.With(mMiddleware.JwtAuth(r.LoggerHandler, r.SQLHandler.DB)).
-			Get("/{user_name}", uh.Show)
-		cr.With(mMiddleware.JwtAuth(r.LoggerHandler, r.SQLHandler.DB)).
-			Put("/{id:0*([1-9])([0-9]?)+}", uh.Update)
-		cr.With(mMiddleware.JwtAuth(r.LoggerHandler, r.SQLHandler.DB)).
-			With(mMiddleware.CheckSuperAdmin(r.LoggerHandler)).
-			Get("/", uh.Index)
-		cr.With(mMiddleware.JwtAuth(r.LoggerHandler, r.SQLHandler.DB)).
-			With(mMiddleware.CheckSuperAdmin(r.LoggerHandler)).
-			Delete("/{id:0*([1-9])([0-9]?)+}", uh.Delete)
+		cr.Route("/", func(cr chi.Router) {
+			cr.Use(mMiddleware.JwtAuth(r.LoggerHandler, r.SQLHandler.DB))
+			cr.Route("/{user_name}", func(cr chi.Router) {
+				cr.Get("/", uh.Show)
+				cr.Get("/matches", mh.GetByUserName)
+			})
+			cr.Put("/{id:0*([1-9])([0-9]?)+}", uh.Update)
+			cr.With(mMiddleware.CheckSuperAdmin(r.LoggerHandler)).
+				Get("/", uh.Index)
+			cr.With(mMiddleware.CheckSuperAdmin(r.LoggerHandler)).
+				Delete("/{id:0*([1-9])([0-9]?)+}", uh.Delete)
+		})
 	})
 
 	r.Mux.Route("/posts", func(cr chi.Router) {
@@ -114,6 +116,7 @@ func (r *Router) SetupHandler() {
 
 	r.Mux.Route("/matches", func(cr chi.Router) {
 		cr.Use(mMiddleware.JwtAuth(r.LoggerHandler, r.SQLHandler.DB))
+		cr.With(mMiddleware.CheckSuperAdmin(r.LoggerHandler)).Get("/", mh.Index)
 		cr.Post("/", mh.Create)
 		cr.Get("/{id:0*([1-9])([0-9]?)+}", mh.Show)
 	})
