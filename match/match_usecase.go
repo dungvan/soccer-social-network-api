@@ -41,10 +41,17 @@ func (u *usecase) Index(page uint) (IndexResponse, error) {
 	matchesResp := make([]RespMatch, 0)
 	for _, match := range matches {
 		respMatch := RespMatch{
-			ID:           match.ID,
-			TournamentID: match.TournamentID,
-			Description:  match.Description,
-			StartDate:    match.StartDate,
+			ID:          match.ID,
+			Description: match.Description,
+			StartDate:   match.StartDate,
+			Team1Goals:  match.Team1Goals,
+			Team2Goals:  match.Team2Goals,
+		}
+		if match.TournamentID != nil {
+			respMatch.Tournament, err = u.repository.GetTournamentByID(*match.TournamentID)
+			if err != nil {
+				return IndexResponse{Matches: []RespMatch{}}, utils.ErrorsWrap(err, "repository.GetTournamentByID() error")
+			}
 		}
 		master, err := u.repository.GetMatchMaster(match.ID)
 		if err != nil {
@@ -121,11 +128,18 @@ func (u *usecase) Show(matchID uint) (RespMatch, error) {
 			FirstName: mstUser.FirstName,
 			LastName:  mstUser.LastName,
 		},
-		TournamentID: match.TournamentID,
-		Description:  match.Description,
-		StartDate:    match.StartDate,
-		Team1:        team1,
-		Team2:        team2,
+		Description: match.Description,
+		StartDate:   match.StartDate,
+		Team1:       team1,
+		Team2:       team2,
+		Team1Goals:  match.Team1Goals,
+		Team2Goals:  match.Team2Goals,
+	}
+	if match.TournamentID != nil {
+		respMatchData.Tournament, err = u.repository.GetTournamentByID(*match.TournamentID)
+		if err != nil {
+			return RespMatch{}, utils.ErrorsWrap(err, "repository.GetTournamentByID() error")
+		}
 	}
 
 	return respMatchData, nil
@@ -149,10 +163,17 @@ func (u *usecase) GetByUserName(userName string) (IndexResponse, error) {
 	matchesResp := make([]RespMatch, 0)
 	for _, match := range matches {
 		respMatch := RespMatch{
-			ID:           match.ID,
-			TournamentID: match.TournamentID,
-			Description:  match.Description,
-			StartDate:    match.StartDate,
+			ID:          match.ID,
+			Description: match.Description,
+			StartDate:   match.StartDate,
+			Team1Goals:  match.Team1Goals,
+			Team2Goals:  match.Team2Goals,
+		}
+		if match.TournamentID != nil {
+			respMatch.Tournament, err = u.repository.GetTournamentByID(*match.TournamentID)
+			if err != nil {
+				return IndexResponse{Matches: []RespMatch{}}, utils.ErrorsWrap(err, "repository.GetTournamentByID() error")
+			}
 		}
 		master, err := u.repository.GetMatchMaster(match.ID)
 		if err != nil {

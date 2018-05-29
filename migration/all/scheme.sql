@@ -15,7 +15,7 @@ DROP TABLE IF EXISTS "comments";
 DROP TABLE IF EXISTS "posts";
 DROP TABLE IF EXISTS "players";
 DROP TABLE IF EXISTS "masters";
-DROP TABLE IF EXISTS "matchs";
+DROP TABLE IF EXISTS "matches";
 DROP TABLE IF EXISTS "teams";
 DROP TABLE IF EXISTS "tournaments";
 DROP TABLE IF EXISTS "user_follows";
@@ -236,6 +236,8 @@ CREATE TABLE "matches"
 	start_date timestamp NOT NULL,
 	team1_id int NOT NULL,
 	team2_id int NOT NULL,
+	team1_goals int,
+	team2_goals int,
 	created_at timestamp,
 	updated_at timestamp,
 	deleted_at timestamp,

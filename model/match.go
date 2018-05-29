@@ -16,4 +16,6 @@ type Match struct {
 	Team1ID      uint
 	Team2ID      uint
 	Location     *Location
+	Team1Goals   *uint
+	Team2Goals   *uint
 }

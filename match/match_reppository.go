@@ -13,6 +13,7 @@ type Repository interface {
 	GetTeamByID(id uint) (RespTeam, error)
 	FindMatchByID(matchID uint) (*model.Match, error)
 	GetTeamsIDByPlayerUserName(userName string) ([]uint, error)
+	GetTournamentByID(id uint) (*RespTournament, error)
 	GetMatchesByTeamsID(teamsID []uint) (total uint, matches []model.Match, err error)
 	GetMatchesByMaster(masterUserID uint) ([]model.Match, error)
 	GetMatchMaster(matchID uint) (*model.User, error)
@@ -43,6 +44,14 @@ func (r *repository) FindMatchByID(matchID uint) (*model.Match, error) {
 		return match, err
 	}
 	return match, utils.ErrorsWrap(err, "can't find match")
+}
+
+func (r *repository) GetTournamentByID(id uint) (*RespTournament, error) {
+	respTour := &RespTournament{}
+	err := r.db.Model(&model.Tournament{}).
+		Select(`id, name, description, start_date, end_date`).
+		Where("id = ?", id).Scan(respTour).Error
+	return respTour, utils.ErrorsWrap(err, "can't find tournamnet")
 }
 
 func (r *repository) GetTeamByID(id uint) (RespTeam, error) {
