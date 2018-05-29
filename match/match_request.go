@@ -18,3 +18,11 @@ type CreateRequest struct {
 	Team1ID      uint      `json:"team1_id" validate:"required,nefield=Team2ID"`
 	Team2ID      uint      `json:"team2_id" validate:"required,nefield=Team1ID"`
 }
+
+// UpdateGoaldsRequest struct
+type UpdateGoaldsRequest struct {
+	ID         uint  `validate:"required,min=1"`
+	MasterID   uint  `validate:"required,min=1"`
+	Team1Goals *uint `json:"team1_goals" validate:"omitempty,min=0"`
+	Team2Goals *uint `json:"team2_goals" validate:"omitempty,min=0"`
+}

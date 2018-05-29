@@ -19,6 +19,7 @@ type Repository interface {
 	GetMatchMaster(matchID uint) (*model.User, error)
 	CreateMatch(match *model.Match, transaction *gorm.DB) error
 	GetAllMatches(page uint) (total uint, matches []model.Match, err error)
+	UpdateGoals(id uint, team1Goals, team2Goals *uint) error
 }
 
 type repository struct {
@@ -142,6 +143,10 @@ func (r *repository) GetMatchMaster(matchID uint) (*model.User, error) {
 func (r *repository) CreateMatch(m *model.Match, tx *gorm.DB) error {
 	result := tx.Create(m)
 	return utils.ErrorsWrap(result.Error, "can't create match")
+}
+
+func (r *repository) UpdateGoals(id uint, team1Goals, team2Goals *uint) error {
+	return utils.ErrorsWrap(r.db.Model(&model.Match{}).Where("id = ?", id).Update(map[string]interface{}{"team1_goals": team1Goals, "team2_goals": team2Goals}).Error, "can't update goals match")
 }
 
 // NewRepository create new instance of Repository

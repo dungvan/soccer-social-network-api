@@ -120,6 +120,7 @@ func (r *Router) SetupHandler() {
 		cr.Post("/", mh.Create)
 		cr.Get("/{id:0*([1-9])([0-9]?)+}", mh.Show)
 		cr.Get("/masters", mh.GetByMaster)
+		cr.Put("/{id:0*([1-9])([0-9]?)+}", mh.UpdateGoals)
 	})
 
 	r.Mux.Route("/tournaments", func(cr chi.Router) {

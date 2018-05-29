@@ -124,6 +124,41 @@ func (h *HTTPHandler) GetByMaster(w http.ResponseWriter, r *http.Request) {
 	h.ResponseJSON(w, resp)
 }
 
+// UpdateGoals handler
+func (h *HTTPHandler) UpdateGoals(w http.ResponseWriter, r *http.Request) {
+	request := UpdateGoaldsRequest{}
+	messages, err := h.ParseJSON(r, &request)
+	if len(messages) != 0 {
+		h.Logger.Error(err, "h.ParseJSON() error")
+		common := utils.CommonResponse{Message: "validation error.", Errors: messages}
+		h.StatusBadRequest(w, common)
+		return
+	}
+	if err != nil {
+		h.Logger.Error(err, "h.ParseJSON() error")
+		common := utils.CommonResponse{Message: "internal server error.", Errors: nil}
+		h.StatusServerError(w, common)
+		return
+	}
+	request.MasterID = auth.GetUserFromContext(r.Context()).ID
+	id, _ := strconv.Atoi(chi.URLParam(r, "id"))
+	request.ID = uint(id)
+	// validate get data.
+	if err = h.Validate(w, request); err != nil {
+		return
+	}
+	err = h.usecase.UpdateGoals(request)
+	if err != nil {
+		h.Logger.WithFields(logrus.Fields{
+			"error": err,
+		}).Error("usecase.Index() error")
+		common := utils.CommonResponse{Message: "internal server error.", Errors: nil}
+		h.StatusServerError(w, common)
+		return
+	}
+	h.ResponseJSON(w, utils.CommonResponse{Message: "update success"})
+}
+
 // NewHTTPHandler return new HTTPHandler instance.
 func NewHTTPHandler(bh *base.HTTPHandler, bu *base.Usecase, br *base.Repository, s *infrastructure.SQL, c *infrastructure.Cache) *HTTPHandler {
 	// outfit set.

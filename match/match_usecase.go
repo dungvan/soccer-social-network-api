@@ -21,6 +21,8 @@ type Usecase interface {
 	GetByUserName(userName string) (IndexResponse, error)
 	// GetByMasterUserID return all matches by master id
 	GetByMasterUserID(userID uint) (IndexResponse, error)
+	// UpdateGoals update goals for a match
+	UpdateGoals(request UpdateGoaldsRequest) error
 }
 
 type usecase struct {
@@ -244,6 +246,17 @@ func (u *usecase) GetByMasterUserID(userID uint) (IndexResponse, error) {
 		matchesResp = append(matchesResp, respMatch)
 	}
 	return IndexResponse{Total: total, Matches: matchesResp}, nil
+}
+
+func (u *usecase) UpdateGoals(request UpdateGoaldsRequest) error {
+	user, err := u.repository.GetMatchMaster(request.ID)
+	if err != nil {
+		return utils.ErrorsWrap(err, "repository.GetMatchMaster() error")
+	}
+	if user.ID != request.MasterID {
+		return utils.ErrorsNew("forbidden to update match")
+	}
+	return utils.ErrorsWrap(u.repository.UpdateGoals(request.ID, request.Team1Goals, request.Team2Goals), "repository.UpdateGoals() error")
 }
 
 // NewUsecase creare new instance of Usecase
