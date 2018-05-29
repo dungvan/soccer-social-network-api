@@ -30,8 +30,8 @@
         "endpoint": "s3.amazonaws.com",
         "region": "ap-southeast-1",
         "bucketname": "soccer-social-network",
-        "accesskey": "AKIAJKSIFD6E2JLUGDBQ",
-        "secretkey": "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",
+        "accesskey": "",
+        "secretkey": "",
         "secure": true
     },
     "jwt": {
