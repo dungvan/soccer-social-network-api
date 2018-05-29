@@ -21,7 +21,7 @@
         "logmode": true
     },
     "redis": {
-        "host": "develop-cluster.aqrkic.ng.0001.apne1.cache.amazonaws.com",
+        "host": "172.18.1.2",
         "port": "6379",
         "pass": ""
     },
@@ -30,8 +30,8 @@
         "endpoint": "s3.amazonaws.com",
         "region": "ap-southeast-1",
         "bucketname": "soccer-social-network",
-        "accesskey": "",
-        "secretkey": "",
+        "accesskey": "AKIAJKSIFD6E2JLUGDBQ",
+        "secretkey": "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",
         "secure": true
     },
     "jwt": {

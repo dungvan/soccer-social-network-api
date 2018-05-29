@@ -15,7 +15,7 @@ type Repository interface {
 	GetTeamsIDByPlayerUserName(userName string) ([]uint, error)
 	GetTournamentByID(id uint) (*RespTournament, error)
 	GetMatchesByTeamsID(teamsID []uint) (total uint, matches []model.Match, err error)
-	GetMatchesByMaster(masterUserID uint) ([]model.Match, error)
+	GetMatchesByMaster(masterUserID uint) (total uint, matches []model.Match, err error)
 	GetMatchMaster(matchID uint) (*model.User, error)
 	CreateMatch(match *model.Match, transaction *gorm.DB) error
 	GetAllMatches(page uint) (total uint, matches []model.Match, err error)
@@ -118,15 +118,15 @@ func (r *repository) GetMatchesByTeamsID(teamsID []uint) (uint, []model.Match, e
 	return total, matches, utils.ErrorsWrap(err, "can't get matches by array of teams id.")
 }
 
-func (r *repository) GetMatchesByMaster(masterUserID uint) ([]model.Match, error) {
+func (r *repository) GetMatchesByMaster(masterUserID uint) (uint, []model.Match, error) {
 	matches := make([]model.Match, 0)
+	var total uint
 	err := r.db.Model(&model.Match{}).
-		Select("matches.id, matches.description, matches.start_date").
+		Select("matches.id, matches.description, matches.start_date, matches.team1_id, matches.team2_id, matches.tournament_id, matches.team1_goals, matches.team2_goals").
 		Joins(`INNER JOIN masters ON (masters.owner_type = 'matches' AND masters.owner_id = matches.id AND masters.user_id = ? AND masters.deleted_at IS NULL)`, masterUserID).
-		Limit(100).
 		Order("matches.start_date desc, matches.id desc").
-		Scan(&matches).Error
-	return matches, utils.ErrorsWrap(err, "can't get match.")
+		Scan(&matches).Count(&total).Error
+	return total, matches, utils.ErrorsWrap(err, "can't get match.")
 }
 
 func (r *repository) GetMatchMaster(matchID uint) (*model.User, error) {

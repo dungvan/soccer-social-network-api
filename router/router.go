@@ -119,6 +119,7 @@ func (r *Router) SetupHandler() {
 		cr.With(mMiddleware.CheckSuperAdmin(r.LoggerHandler)).Get("/", mh.Index)
 		cr.Post("/", mh.Create)
 		cr.Get("/{id:0*([1-9])([0-9]?)+}", mh.Show)
+		cr.Get("/masters", mh.GetByMaster)
 	})
 
 	r.Mux.Route("/tournaments", func(cr chi.Router) {

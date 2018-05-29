@@ -19,6 +19,8 @@ type Usecase interface {
 	Show(matchID uint) (RespMatch, error)
 	// GetByUserName return all matches by user name
 	GetByUserName(userName string) (IndexResponse, error)
+	// GetByMasterUserID return all matches by master id
+	GetByMasterUserID(userID uint) (IndexResponse, error)
 }
 
 type usecase struct {
@@ -154,6 +156,52 @@ func (u *usecase) GetByUserName(userName string) (IndexResponse, error) {
 		return IndexResponse{Matches: []RespMatch{}}, utils.ErrorsWrap(err, "repository.GetTeamsIDByPlayerUserName() error")
 	}
 	total, matches, err := u.repository.GetMatchesByTeamsID(teamsID)
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			err = nil
+		}
+		return IndexResponse{Matches: []RespMatch{}}, utils.ErrorsWrap(err, "repository.GetMatchesByTeamsID() error")
+	}
+	matchesResp := make([]RespMatch, 0)
+	for _, match := range matches {
+		respMatch := RespMatch{
+			ID:          match.ID,
+			Description: match.Description,
+			StartDate:   match.StartDate,
+			Team1Goals:  match.Team1Goals,
+			Team2Goals:  match.Team2Goals,
+		}
+		if match.TournamentID != nil {
+			respMatch.Tournament, err = u.repository.GetTournamentByID(*match.TournamentID)
+			if err != nil {
+				return IndexResponse{Matches: []RespMatch{}}, utils.ErrorsWrap(err, "repository.GetTournamentByID() error")
+			}
+		}
+		master, err := u.repository.GetMatchMaster(match.ID)
+		if err != nil {
+			return IndexResponse{Matches: []RespMatch{}}, utils.ErrorsWrap(err, "repository.GetMatchMaster() error")
+		}
+		respMatch.Master = RespMaster{
+			ID:        master.ID,
+			UserName:  master.UserName,
+			FirstName: master.FirstName,
+			LastName:  master.LastName,
+		}
+		respMatch.Team1, err = u.repository.GetTeamByID(match.Team1ID)
+		if err != nil {
+			return IndexResponse{Matches: []RespMatch{}}, utils.ErrorsWrap(err, "repository.GetTeamByID() error")
+		}
+		respMatch.Team2, err = u.repository.GetTeamByID(match.Team2ID)
+		if err != nil {
+			return IndexResponse{Matches: []RespMatch{}}, utils.ErrorsWrap(err, "repository.GetTeamByID() error")
+		}
+		matchesResp = append(matchesResp, respMatch)
+	}
+	return IndexResponse{Total: total, Matches: matchesResp}, nil
+}
+
+func (u *usecase) GetByMasterUserID(userID uint) (IndexResponse, error) {
+	total, matches, err := u.repository.GetMatchesByMaster(userID)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			err = nil
