@@ -12,8 +12,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/dungvan2512/soccer-social-network-api/infrastructure"
-	"github.com/dungvan2512/soccer-social-network-api/shared/utils"
+	"github.com/dungvan/soccer-social-network-api/infrastructure"
+	"github.com/dungvan/soccer-social-network-api/shared/utils"
 	"github.com/go-chi/chi"
 	"github.com/stretchr/testify/assert"
 )

@@ -3,9 +3,9 @@ package tournament
 import (
 	"net/http"
 
-	"github.com/dungvan2512/soccer-social-network-api/model"
-	"github.com/dungvan2512/soccer-social-network-api/shared/base"
-	"github.com/dungvan2512/soccer-social-network-api/shared/utils"
+	"github.com/dungvan/soccer-social-network-api/model"
+	"github.com/dungvan/soccer-social-network-api/shared/base"
+	"github.com/dungvan/soccer-social-network-api/shared/utils"
 	"github.com/jinzhu/gorm"
 )
 

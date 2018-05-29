@@ -3,14 +3,14 @@ package router
 import (
 	"net/http"
 
-	"github.com/dungvan2512/soccer-social-network-api/infrastructure"
-	"github.com/dungvan2512/soccer-social-network-api/match"
-	"github.com/dungvan2512/soccer-social-network-api/post"
-	"github.com/dungvan2512/soccer-social-network-api/shared/base"
-	mMiddleware "github.com/dungvan2512/soccer-social-network-api/shared/middleware"
-	"github.com/dungvan2512/soccer-social-network-api/team"
-	"github.com/dungvan2512/soccer-social-network-api/tournament"
-	"github.com/dungvan2512/soccer-social-network-api/user"
+	"github.com/dungvan/soccer-social-network-api/infrastructure"
+	"github.com/dungvan/soccer-social-network-api/match"
+	"github.com/dungvan/soccer-social-network-api/post"
+	"github.com/dungvan/soccer-social-network-api/shared/base"
+	mMiddleware "github.com/dungvan/soccer-social-network-api/shared/middleware"
+	"github.com/dungvan/soccer-social-network-api/team"
+	"github.com/dungvan/soccer-social-network-api/tournament"
+	"github.com/dungvan/soccer-social-network-api/user"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 )

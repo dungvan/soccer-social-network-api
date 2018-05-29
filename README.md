@@ -8,7 +8,7 @@
     - SSN_API_DIR the base folder of this project
 - step 2 build docker
 ```bash
-$ git clone https://github.com/dungvan2512/soccer-social-network-api
+$ git clone https://github.com/dungvan/soccer-social-network-api
 $ cd soccer-social-network-api
 $ docker-compose build
 $ docker-compose up

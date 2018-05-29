@@ -4,10 +4,10 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/dungvan2512/soccer-social-network-api/infrastructure"
-	"github.com/dungvan2512/soccer-social-network-api/shared/auth"
-	"github.com/dungvan2512/soccer-social-network-api/shared/base"
-	"github.com/dungvan2512/soccer-social-network-api/shared/utils"
+	"github.com/dungvan/soccer-social-network-api/infrastructure"
+	"github.com/dungvan/soccer-social-network-api/shared/auth"
+	"github.com/dungvan/soccer-social-network-api/shared/base"
+	"github.com/dungvan/soccer-social-network-api/shared/utils"
 	"github.com/go-chi/chi"
 	"github.com/sirupsen/logrus"
 )

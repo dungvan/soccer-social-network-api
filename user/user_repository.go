@@ -1,10 +1,10 @@
 package user
 
 import (
-	"github.com/dungvan2512/soccer-social-network-api/model"
-	"github.com/dungvan2512/soccer-social-network-api/shared/auth"
-	"github.com/dungvan2512/soccer-social-network-api/shared/base"
-	"github.com/dungvan2512/soccer-social-network-api/shared/utils"
+	"github.com/dungvan/soccer-social-network-api/model"
+	"github.com/dungvan/soccer-social-network-api/shared/auth"
+	"github.com/dungvan/soccer-social-network-api/shared/base"
+	"github.com/dungvan/soccer-social-network-api/shared/utils"
 	"github.com/garyburd/redigo/redis"
 	"github.com/jinzhu/gorm"
 )

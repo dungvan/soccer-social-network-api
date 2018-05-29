@@ -3,7 +3,7 @@ package post
 import (
 	"time"
 
-	"github.com/dungvan2512/soccer-social-network-api/model"
+	"github.com/dungvan/soccer-social-network-api/model"
 )
 
 // Comment struct table

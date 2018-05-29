@@ -5,10 +5,10 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/dungvan2512/soccer-social-network-api/infrastructure"
-	"github.com/dungvan2512/soccer-social-network-api/model"
-	"github.com/dungvan2512/soccer-social-network-api/shared/base"
-	"github.com/dungvan2512/soccer-social-network-api/shared/utils"
+	"github.com/dungvan/soccer-social-network-api/infrastructure"
+	"github.com/dungvan/soccer-social-network-api/model"
+	"github.com/dungvan/soccer-social-network-api/shared/base"
+	"github.com/dungvan/soccer-social-network-api/shared/utils"
 	"github.com/jinzhu/gorm"
 )
 

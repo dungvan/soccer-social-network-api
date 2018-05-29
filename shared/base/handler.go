@@ -20,9 +20,9 @@ import (
 	"io"
 	"path/filepath"
 
-	"github.com/dungvan2512/soccer-social-network-api/infrastructure"
-	"github.com/dungvan2512/soccer-social-network-api/shared/utils"
-	"github.com/dungvan2512/soccer-social-network-api/shared/validator"
+	"github.com/dungvan/soccer-social-network-api/infrastructure"
+	"github.com/dungvan/soccer-social-network-api/shared/utils"
+	"github.com/dungvan/soccer-social-network-api/shared/validator"
 	"github.com/go-playground/form"
 	"github.com/nicksnyder/go-i18n/i18n/bundle"
 	"github.com/sirupsen/logrus"
