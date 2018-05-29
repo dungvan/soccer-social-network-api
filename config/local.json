@@ -25,7 +25,7 @@
         "port": "6379",
         "pass": ""
     },
-    "objectstorage": {
+    "objectstorage-minio": {
         "storage": "minio",
         "endpoint": "e78f6947.ngrok.io",
         "region": "ap-northeast-1",
@@ -33,6 +33,15 @@
         "accesskey": "DUNGVANEXAMPLE",
         "secretkey": "DUNGVANEXAMPLE",
         "secure": false
+    },
+    "objectstorage": {
+        "storage": "s3",
+        "endpoint": "s3.amazonaws.com",
+        "region": "ap-southeast-1",
+        "bucketname": "soccer-social-network",
+        "accesskey": "AKIAJKSIFD6E2JLUGDBQ",
+        "secretkey": "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",
+        "secure": true
     },
     "jwt": {
         "_comment": "keypath is the private key used file by jwt.",
