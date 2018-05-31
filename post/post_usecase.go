@@ -96,7 +96,7 @@ func (u *usecase) Index(userID, page uint) (IndexResponse, error) {
 				output := []interface{}{}
 				if post.Images != nil && len(post.Images) > 0 {
 					for _, image := range post.Images {
-						imageurl := utils.GetStorageURL(infrastructure.Storage, infrastructure.Endpoint, infrastructure.Secure, bucketName, utils.GetObjectPath(infrastructure.Storage, s3ImagePath, image.Name), infrastructure.Region)
+						imageurl := utils.GetStorageURL(infrastructure.Storage, infrastructure.Endpoint, infrastructure.Secure, bucketName, image.Name, infrastructure.Region)
 						output = append(output, imageurl)
 					}
 				}
@@ -147,7 +147,7 @@ func (u *usecase) GetByUserID(userIDCreate, userIDCall, page uint) (IndexRespons
 				output := []interface{}{}
 				if post.Images != nil && len(post.Images) > 0 {
 					for _, image := range post.Images {
-						imageurl := utils.GetStorageURL(infrastructure.Storage, infrastructure.Endpoint, infrastructure.Secure, bucketName, utils.GetObjectPath(infrastructure.Storage, s3ImagePath, image.Name), infrastructure.Region)
+						imageurl := utils.GetStorageURL(infrastructure.Storage, infrastructure.Endpoint, infrastructure.Secure, bucketName, image.Name, infrastructure.Region)
 						output = append(output, imageurl)
 					}
 				}

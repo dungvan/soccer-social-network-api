@@ -25,5 +25,5 @@ type UpdateRequest struct {
 // PlayerRequest struct
 type PlayerRequest struct {
 	ID       uint   `json:"id" validate:"required"`
-	Position string `json:"position" validate:"required,eq=gk|eq=sw|eq=cb|eq=lb|eq=rb|eq=dm|eq=lwb|eq=rwb|eq=cm|eq=am|eq=lw|eq=rw|eq=wf|eq=cf|eq=any"`
+	Position string `json:"position" validate:"required,eq=gk|eq=back|eq=defender|eq=midfilder|eq=stricker|eq=winger|eq=any"`
 }

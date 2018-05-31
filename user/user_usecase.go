@@ -21,7 +21,7 @@ type Usecase interface {
 	// Show a user
 	Show(userName string) (RespUser, error)
 	// Index get all user  by super admin
-	Index(page uint) (IndexResponse, error)
+	Index(IndexRequest) (IndexResponse, error)
 	// Delete a user
 	Delete(id uint) error
 	// Update a user
@@ -48,9 +48,9 @@ func (u *usecase) Login(l LoginRequest) (LoginResponse, error) {
 	var err error
 	var token string
 	if strings.ContainsAny(l.UserNameOrEmail, "@ & .") {
-		user, err = u.repository.FindUserByEmail(l.UserNameOrEmail)
+		user, err = u.repository.GetUserByEmail(l.UserNameOrEmail)
 	} else {
-		user, err = u.repository.FindUserByUserName(l.UserNameOrEmail)
+		user, err = u.repository.GetUserByUserName(l.UserNameOrEmail)
 	}
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -75,7 +75,7 @@ func (u *usecase) SendFriendRequest(FriendRequest) error {
 }
 
 func (u *usecase) Show(userName string) (RespUser, error) {
-	user, err := u.repository.FindUserByUserName(userName)
+	user, err := u.repository.GetUserByUserName(userName)
 	if err == gorm.ErrRecordNotFound {
 		return RespUser{TypeOfStatusCode: http.StatusNotFound}, utils.ErrorsNew("the User dose not exist")
 	} else if err != nil {
@@ -98,32 +98,27 @@ func (u *usecase) Show(userName string) (RespUser, error) {
 	return respUserData, nil
 }
 
-func (u *usecase) Index(page uint) (IndexResponse, error) {
-	if page < 1 {
-		page = 1
+func (u *usecase) Index(r IndexRequest) (IndexResponse, error) {
+	if r.Page < 1 {
+		r.Page = 1
 	}
-	total, users, err := u.repository.GetAllUser(page)
+	total, users, err := u.repository.GetAllUser(r.Search, r.Page)
 	if err == gorm.ErrRecordNotFound {
-		return IndexResponse{Users: []RespUser{}}, nil
+		return IndexResponse{Users: []RespUserSearch{}}, nil
 	} else if err != nil {
-		return IndexResponse{Total: total, Users: []RespUser{}}, utils.ErrorsWrap(err, "repository.GetAllUser() error")
+		return IndexResponse{Total: total, Users: []RespUserSearch{}}, utils.ErrorsWrap(err, "repository.GetAllUser() error")
 	}
 	response := IndexResponse{
 		Total: total,
-		Users: func() []RespUser {
-			respUsers := make([]RespUser, 0)
+		Users: func() []RespUserSearch {
+			respUsers := make([]RespUserSearch, 0)
 			for _, user := range users {
-				respUsers = append(respUsers, RespUser{
+				respUsers = append(respUsers, RespUserSearch{
 					ID:        user.ID,
 					UserName:  user.UserName,
 					Email:     user.Email,
 					FirstName: user.FirstName,
 					LastName:  user.LastName,
-					Birthdate: user.Birthday,
-					City:      user.City,
-					Country:   user.Country,
-					About:     user.About,
-					Quote:     user.Quote,
 					Role:      user.Role,
 				})
 			}
@@ -134,7 +129,7 @@ func (u *usecase) Index(page uint) (IndexResponse, error) {
 }
 
 func (u *usecase) Update(r UpdateRequest) (RespUser, error) {
-	user, err := u.repository.FindUserByID(r.ID)
+	user, err := u.repository.GetUserByID(r.ID)
 	if err != nil {
 		return RespUser{}, utils.ErrorsWrap(err, "repository.GetAllUser() error")
 	}

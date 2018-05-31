@@ -13,12 +13,12 @@ import (
 type Repository interface {
 	// Create repo
 	CreateUser(model.User) error
-	// FindUserByID
-	FindUserByID(ID uint) (*model.User, error)
-	// FindUserByUserName
-	FindUserByUserName(userName string) (*model.User, error)
-	// FindUserByEmail
-	FindUserByEmail(email string) (*model.User, error)
+	// GetUserByID
+	GetUserByID(ID uint) (*model.User, error)
+	// GetUserByUserName
+	GetUserByUserName(userName string) (*model.User, error)
+	// GetUserByEmail
+	GetUserByEmail(userNameOrEmail string) (*model.User, error)
 	// CheckLogin return true if password match
 	CheckLogin(user model.User, password string) bool
 	// GenerateToken for user
@@ -28,7 +28,7 @@ type Repository interface {
 	// DeleteUserFollow
 	DeleteUserFollow(userFollowID uint) error
 	// GetAllUser
-	GetAllUser(page uint) (total uint, users []model.User, err error)
+	GetAllUser(userNameOrEmail string, page uint) (total uint, users []model.User, err error)
 	// Delete user
 	DeleteUser(userID uint) error
 	// Update User
@@ -45,7 +45,7 @@ func (r *repository) CreateUser(u model.User) error {
 	return r.db.Create(&u).Error
 }
 
-func (r *repository) FindUserByID(ID uint) (*model.User, error) {
+func (r *repository) GetUserByID(ID uint) (*model.User, error) {
 	user := &model.User{}
 	err := r.db.Where("id = ?", ID).First(user).Error
 	if err == gorm.ErrRecordNotFound {
@@ -54,7 +54,7 @@ func (r *repository) FindUserByID(ID uint) (*model.User, error) {
 	return user, utils.ErrorsWrap(err, "can't find user")
 }
 
-func (r *repository) FindUserByUserName(userName string) (*model.User, error) {
+func (r *repository) GetUserByUserName(userName string) (*model.User, error) {
 	user := &model.User{}
 	err := r.db.Where("user_name = ?", userName).First(user).Error
 	if err == gorm.ErrRecordNotFound {
@@ -63,7 +63,7 @@ func (r *repository) FindUserByUserName(userName string) (*model.User, error) {
 	return user, utils.ErrorsWrap(err, "can't find user")
 }
 
-func (r *repository) FindUserByEmail(emmail string) (*model.User, error) {
+func (r *repository) GetUserByEmail(emmail string) (*model.User, error) {
 	user := &model.User{}
 	err := r.db.Where("email = ?", email).First(user).Error
 	if err == gorm.ErrRecordNotFound {
@@ -88,18 +88,17 @@ func (r *repository) DeleteUserFollow(userFollowID uint) error {
 	return nil
 }
 
-func (r *repository) GetAllUser(page uint) (uint, []model.User, error) {
+func (r *repository) GetAllUser(userNameOrEmail string, page uint) (uint, []model.User, error) {
+	likeCondition := userNameOrEmail + "%%"
 	var total uint
-	var err error
 	users := make([]model.User, 0)
-	result := r.db.Model(&model.User{}).
-		Select("id, user_name, email, first_name, last_name, role")
-	result.Count(&total)
-	if total <= pagingLimit*(page-1) {
-		return total, users, gorm.ErrRecordNotFound
-	}
-	err = result.Offset(pagingLimit * (page - 1)).
-		Limit(pagingLimit).Order("id asc").
+	err := r.db.Model(&model.User{}).
+		Select("id, user_name, email, first_name, last_name, role").
+		Where("user_name LIKE ? OR email LIKE ?", likeCondition, likeCondition).
+		Count(&total).
+		Offset(pagingLimit * (page - 1)).
+		Limit(pagingLimit).
+		Order("id asc").
 		Scan(&users).Error
 	return total, users, utils.ErrorsWrap(err, "can't get all user")
 }

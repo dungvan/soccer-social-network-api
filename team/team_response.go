@@ -5,12 +5,6 @@ type CreateResponse struct {
 	TeamID uint `json:"team_id"`
 }
 
-// ByUserResponse struct
-type ByUserResponse struct {
-	Master IndexResponse `json:"master"`
-	Player IndexResponse `json:"player"`
-}
-
 // IndexResponse struct
 type IndexResponse struct {
 	TypeOfStatusCode int        `json:"-"`

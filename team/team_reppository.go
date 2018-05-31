@@ -15,8 +15,8 @@ import (
 type Repository interface {
 	GetAllTeam(page uint) (total uint, teams []model.Team, err error)
 	FindTeamByID(teamID uint) (*model.Team, error)
-	GetAllTeamsByMasterUserID(masterUserID uint) ([]model.Team, error)
-	GetAllTeamsByPlayerUserID(playerUserID uint) ([]model.Team, error)
+	GetAllTeamsByMasterUserID(masterUserID uint) (total uint, teams []model.Team, err error)
+	GetAllTeamsByPlayerUserName(userName string) (total uint, teams []model.Team, err error)
 	CreateTeam(team *model.Team, transaction *gorm.DB) error
 	CreateTeamPlayers(teamPlayers []model.TeamPlayer, transaction *gorm.DB) error
 	GetTeamMaster(teamID uint) (*model.User, error)
@@ -59,27 +59,29 @@ func (r *repository) FindTeamByID(teamID uint) (*model.Team, error) {
 	return team, utils.ErrorsWrap(err, "can't find team")
 }
 
-func (r *repository) GetAllTeamsByMasterUserID(masterUserID uint) ([]model.Team, error) {
+func (r *repository) GetAllTeamsByMasterUserID(masterUserID uint) (uint, []model.Team, error) {
 	teams := make([]model.Team, 0)
+	var total uint
 	err := r.db.Model(&model.Team{}).
 		Select("teams.id, teams.name, teams.description, teams.created_at").
 		Joins(`INNER JOIN masters ON (masters.owner_type = 'teams' AND masters.owner_id = teams.id AND masters.user_id = ? AND masters.deleted_at IS NULL)`, masterUserID).
-		Limit(100).
+		Count(&total).
 		Order("teams.created_at desc, teams.id desc").
 		Scan(&teams).Error
-	return teams, utils.ErrorsWrap(err, "can't get team.")
+	return total, teams, utils.ErrorsWrap(err, "can't get team.")
 }
 
-func (r *repository) GetAllTeamsByPlayerUserID(playerUserID uint) ([]model.Team, error) {
+func (r *repository) GetAllTeamsByPlayerUserName(userName string) (uint, []model.Team, error) {
 	teams := make([]model.Team, 0)
+	var total uint
 	err := r.db.Model(&model.Team{}).
 		Select("teams.id, teams.name, teams.description, teams.created_at").
 		Joins(`INNER JOIN team_players ON (team_players.team_id = teams.id AND team_players.deleted_at IS NULL)`).
-		Where("team_players.user_id = ?", playerUserID).
-		Limit(100).
+		Joins(`INNER JOIN users ON (users.deleted_at IS NULL AND team_players.user_id = users.id AND users.user_name = ?)`, userName).
+		Count(&total).
 		Order("teams.created_at desc, teams.id desc").
 		Scan(&teams).Error
-	return teams, utils.ErrorsWrap(err, "can't get team.")
+	return total, teams, utils.ErrorsWrap(err, "can't get team.")
 }
 
 func (r *repository) CreateTeam(t *model.Team, tx *gorm.DB) error {

@@ -71,6 +71,7 @@ func (r *Router) SetupHandler() {
 			cr.Route("/{user_name}", func(cr chi.Router) {
 				cr.Get("/", uh.Show)
 				cr.Get("/matches", mh.GetByUserName)
+				cr.Get("/teams", th.GetByUserName)
 			})
 			cr.Put("/{id:0*([1-9])([0-9]?)+}", uh.Update)
 			cr.With(mMiddleware.CheckSuperAdmin(r.LoggerHandler)).
@@ -107,7 +108,7 @@ func (r *Router) SetupHandler() {
 	r.Mux.Route("/teams", func(cr chi.Router) {
 		cr.Use(mMiddleware.JwtAuth(r.LoggerHandler, r.SQLHandler.DB))
 		cr.With(mMiddleware.CheckSuperAdmin(r.LoggerHandler)).Get("/", th.Index)
-		cr.Get("/users/{id:0*([1-9])([0-9]?)+}", th.GetByUser)
+		cr.Get("/masters", th.GetByMaster)
 		cr.Post("/", th.Create)
 		cr.Get("/{id:0*([1-9])([0-9]?)+}", th.Show)
 		cr.Delete("/{id:0*([1-9])([0-9]?)+}", th.Delete)

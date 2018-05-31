@@ -14,15 +14,12 @@ const (
 
 // GetObjectPath get objectpath.
 func GetObjectPath(storage, s3Path, uploadFile string) string {
-	if storage == StorageS3 {
-		re := regexp.MustCompile(`/$`)
-		var addSlash string
-		if !re.MatchString(s3Path) {
-			addSlash = "/"
-		}
-		return s3Path + addSlash + uploadFile
+	re := regexp.MustCompile(`/$`)
+	var addSlash string
+	if !re.MatchString(s3Path) {
+		addSlash = "/"
 	}
-	return uploadFile
+	return s3Path + addSlash + uploadFile
 }
 
 // GetStorageURL get s3 or minio url.

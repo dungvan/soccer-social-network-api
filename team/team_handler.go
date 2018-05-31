@@ -44,10 +44,25 @@ func (h *HTTPHandler) Index(w http.ResponseWriter, r *http.Request) {
 	h.ResponseJSON(w, response)
 }
 
-// GetByUser handler
-func (h *HTTPHandler) GetByUser(w http.ResponseWriter, r *http.Request) {
-	userID := auth.GetUserFromContext(r.Context()).ID
-	resp, err := h.usecase.GetByUser(userID)
+// GetByMaster handler
+func (h *HTTPHandler) GetByMaster(w http.ResponseWriter, r *http.Request) {
+	masterID := auth.GetUserFromContext(r.Context()).ID
+	resp, err := h.usecase.GetByMasterID(masterID)
+	if err != nil {
+		h.Logger.WithFields(logrus.Fields{
+			"error": err,
+		}).Error("usecase.Index() error")
+		common := utils.CommonResponse{Message: "internal server error.", Errors: nil}
+		h.StatusServerError(w, common)
+		return
+	}
+	h.ResponseJSON(w, resp)
+}
+
+// GetByUserName handler
+func (h *HTTPHandler) GetByUserName(w http.ResponseWriter, r *http.Request) {
+	userName := chi.URLParam(r, "user_name")
+	resp, err := h.usecase.GetByUserName(userName)
 	if err != nil {
 		h.Logger.WithFields(logrus.Fields{
 			"error": err,

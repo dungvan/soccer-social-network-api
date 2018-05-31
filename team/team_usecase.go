@@ -13,8 +13,10 @@ import (
 type Usecase interface {
 	// Index usecase
 	Index(page uint) (IndexResponse, error)
-	// GetByUser usecase
-	GetByUser(userID uint) (ByUserResponse, error)
+	// GetByUserName usecase
+	GetByUserName(userName string) (IndexResponse, error)
+	// GetByMasterID usecase
+	GetByMasterID(masterID uint) (IndexResponse, error)
 	// Create a team
 	Create(CreateRequest) (teamID uint, err error)
 	// Show a team
@@ -72,47 +74,54 @@ func (u *usecase) Index(page uint) (IndexResponse, error) {
 	return response, nil
 }
 
-func (u *usecase) GetByUser(userID uint) (ByUserResponse, error) {
-	response := ByUserResponse{
-		Master: IndexResponse{
-			Teams: []RespTeam{},
-		},
-		Player: IndexResponse{
-			Teams: []RespTeam{},
-		},
+func (u *usecase) GetByMasterID(masterID uint) (IndexResponse, error) {
+	response := IndexResponse{
+		Total: 0,
+		Teams: []RespTeam{},
 	}
-	master, err := u.repository.GetAllTeamsByMasterUserID(userID)
-	if err != nil {
-		return response, utils.ErrorsWrap(err, "repository.GetAllTeamsByMasterUserID() error")
-	}
-	for _, team := range master {
-		mstUser, err := u.repository.GetTeamMaster(team.ID)
-		if err != nil {
-			return response, utils.ErrorsWrap(err, "repositiory.GetTeamMaster() error")
-		}
-		pls, err := u.repository.GetTeamPlayers(team.ID)
-		if err != nil {
-			return response, utils.ErrorsWrap(err, "repositiory.GetRelatedTeamPlayers() error")
-		}
-		respTeamData := RespTeam{
-			ID: team.ID,
-			Master: RespMaster{
-				ID:        mstUser.ID,
-				UserName:  mstUser.UserName,
-				FirstName: mstUser.FirstName,
-				LastName:  mstUser.LastName,
-			},
-			Description: team.Description,
-			Name:        team.Name,
-			Players:     pls,
-		}
-		response.Master.Teams = append(response.Master.Teams, respTeamData)
-	}
-	players, err := u.repository.GetAllTeamsByPlayerUserID(userID)
+
+	total, teams, err := u.repository.GetAllTeamsByMasterUserID(masterID)
 	if err != nil {
 		return response, utils.ErrorsWrap(err, "repository.GetAllTeamsByPlayerUserID() error")
 	}
-	for _, team := range players {
+	mstUser, err := u.repository.GetTeamMaster(teams[0].ID)
+	if err != nil {
+		return response, utils.ErrorsWrap(err, "repositiory.GetTeamMaster() error")
+	}
+	for _, team := range teams {
+		pls, err := u.repository.GetTeamPlayers(team.ID)
+		if err != nil {
+			return response, utils.ErrorsWrap(err, "repositiory.GetRelatedTeamPlayers() error")
+		}
+		respTeamData := RespTeam{
+			ID: team.ID,
+			Master: RespMaster{
+				ID:        mstUser.ID,
+				UserName:  mstUser.UserName,
+				FirstName: mstUser.FirstName,
+				LastName:  mstUser.LastName,
+			},
+			Description: team.Description,
+			Name:        team.Name,
+			Players:     pls,
+		}
+		response.Teams = append(response.Teams, respTeamData)
+	}
+	response.Total = total
+	return response, nil
+}
+
+func (u *usecase) GetByUserName(userName string) (IndexResponse, error) {
+	response := IndexResponse{
+		Total: 0,
+		Teams: []RespTeam{},
+	}
+
+	total, teams, err := u.repository.GetAllTeamsByPlayerUserName(userName)
+	if err != nil {
+		return response, utils.ErrorsWrap(err, "repository.GetAllTeamsByPlayerUserID() error")
+	}
+	for _, team := range teams {
 		mstUser, err := u.repository.GetTeamMaster(team.ID)
 		if err != nil {
 			return response, utils.ErrorsWrap(err, "repositiory.GetTeamMaster() error")
@@ -133,10 +142,9 @@ func (u *usecase) GetByUser(userID uint) (ByUserResponse, error) {
 			Name:        team.Name,
 			Players:     pls,
 		}
-		response.Player.Teams = append(response.Player.Teams, respTeamData)
+		response.Teams = append(response.Teams, respTeamData)
 	}
-	response.Master.Total = uint(len(master))
-	response.Player.Total = uint(len(players))
+	response.Total = total
 	return response, nil
 }
 

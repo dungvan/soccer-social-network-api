@@ -26,7 +26,8 @@ type FriendRequest struct {
 
 // IndexRequest struct
 type IndexRequest struct {
-	Page uint `form:"page" validate:"omitempty,min=1"`
+	Page   uint   `form:"page" validate:"omitempty,min=1"`
+	Search string `form:"search"`
 }
 
 // UpdateRequest struct
@@ -45,4 +46,9 @@ type updateField struct {
 	About     string     `json:"About"`
 	Quote     string     `json:"quote"`
 	Birthday  *time.Time `json:"birthday"`
+}
+
+// SearchRequest struct
+type SearchRequest struct {
+	UserNameOrEmail string `json:"user_name_or_email" validate:"required"`
 }
