@@ -15,6 +15,8 @@ type Usecase interface {
 	Create(CreateRequest) (tournamentID uint, err error)
 	// Show a tournament
 	Show(tournamentID uint) (RespTournament, error)
+	// Index usecase
+	Index(IndexRequest) (IndexResponse, error)
 }
 
 type usecase struct {
@@ -80,6 +82,10 @@ func (u *usecase) Show(tournamentID uint) (RespTournament, error) {
 	}
 
 	return respTournamentData, nil
+}
+
+func (u *usecase) Index(r IndexRequest) (IndexResponse, error) {
+	return IndexResponse{}, nil
 }
 
 // NewUsecase creare new instance of Usecase

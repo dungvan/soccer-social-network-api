@@ -2,6 +2,11 @@ package tournament
 
 import "time"
 
+// IndexRequest struct
+type IndexRequest struct {
+	page uint `form:"page"`
+}
+
 // CreateRequest struct
 type CreateRequest struct {
 	UserID      uint      `validate:"required"`

@@ -14,7 +14,7 @@ import (
 // Repository interface
 type Repository interface {
 	FindTournamentByID(tournamentID uint) (*model.Tournament, error)
-	GetAllTournamentsByMasterUserID(masterUserID uint) ([]model.Tournament, error)
+	GetAllTournamentsByMaster(masterUserID uint) ([]model.Tournament, error)
 	GetTournamentMaster(tournamentID uint) (*model.User, error)
 	CreateTournament(tournament *model.Tournament, transaction *gorm.DB) error
 	CreateTournamentTeams(transaction *gorm.DB, tournamentID uint, teams ...ReqTeam) error
@@ -36,7 +36,7 @@ func (r *repository) FindTournamentByID(tournamentID uint) (*model.Tournament, e
 	return tournament, utils.ErrorsWrap(err, "can't find tournament")
 }
 
-func (r *repository) GetAllTournamentsByMasterUserID(masterUserID uint) ([]model.Tournament, error) {
+func (r *repository) GetAllTournamentsByMaster(masterUserID uint) ([]model.Tournament, error) {
 	tournaments := make([]model.Tournament, 0)
 	err := r.db.Model(&model.Tournament{}).
 		Select("tournaments.id, tournaments.description, tournaments.start_date").
@@ -80,11 +80,30 @@ func (r *repository) CreateTournamentTeams(tx *gorm.DB, tournamentID uint, teams
 
 func (r *repository) GetTournamentTeams(tournamentID uint) ([]Team, error) {
 	teams := make([]Team, 0)
-	result := r.db.Model(&model.Team{}).
-		Select("teams.id, teams.name, tournament_teams.score, tournament_teams.group").
+	err := r.db.Model(&model.Team{}).
+		Select("teams.id, teams.name, teams.description").
 		Joins(`INNER JOIN tournament_teams ON tournament_teams.team_id = teams.id AND tournament_teams.tournament_id = ? AND tournament_teams.deleted_at IS NULL`, tournamentID).
-		Scan(&teams)
-	return teams, utils.ErrorsWrap(result.Error, "can't get team-tournament_teams relation")
+		Scan(&teams).Error
+	if err != nil {
+		return teams, utils.ErrorsWrap(err, "can't get team-tournament_teams relation")
+	}
+	for _, team := range teams {
+		err = r.db.Model(&model.User{}).Select("users.id, users.user_name, users.first_name, users.last_name").
+			Joins(`INNER JOIN masters ON (masters.user_id = users.id AND masters.deleted_at IS NULL)`).
+			Joins(`INNER JOIN team_players ON (masters.owner_type = 'teams' AND masters.owner_id = ? AND team_players.deleted_at IS NULL)`, team.ID).
+			Scan(&team.Master).Error
+		if err != nil {
+			return teams, utils.ErrorsWrap(err, "can't get team masters relation")
+		}
+		team.Players = make([]Player, 0)
+		err = r.db.Model(&model.User{}).Select("users.id, users.user_name, users.first_name, users_last_name, players.position").
+			Joins(`INNER JOIN players ON (users.id = players.user_id AND players.team_id = ? AND players.deleted_at IS NULL)`, team.ID).
+			Scan(&team.Players).Error
+		if err != nil {
+			return teams, utils.ErrorsWrap(err, "can't get team players relation")
+		}
+	}
+	return teams, nil
 }
 
 // NewRepository create new instance of Repository

@@ -78,6 +78,11 @@ func (h *HTTPHandler) Show(w http.ResponseWriter, r *http.Request) {
 	h.ResponseJSON(w, response)
 }
 
+// Index handler
+func (h *HTTPHandler) Index(w http.ResponseWriter, r *http.Request) {
+
+}
+
 // NewHTTPHandler return new HTTPHandler instance.
 func NewHTTPHandler(bh *base.HTTPHandler, bu *base.Usecase, br *base.Repository, s *infrastructure.SQL, c *infrastructure.Cache) *HTTPHandler {
 	// outfit set.

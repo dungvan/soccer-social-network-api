@@ -33,7 +33,7 @@ func (r *repository) GetAllMatches(page uint) (total uint, matches []model.Match
 	total = 0
 	result := r.db.Model(&model.Match{}).Count(&total)
 	err = result.Offset(pagingLimit * (page - 1)).
-		Limit(pagingLimit).Order("created_at desc, id desc").
+		Limit(pagingLimit).Order("created_at asc, id asc").
 		Scan(&matches).Error
 	return total, matches, utils.ErrorsWrap(err, "can't get all matches")
 }
