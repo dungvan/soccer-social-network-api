@@ -26,8 +26,9 @@ type FriendRequest struct {
 
 // IndexRequest struct
 type IndexRequest struct {
-	Page   uint   `form:"page" validate:"omitempty,min=1"`
-	Search string `form:"search"`
+	Page      uint   `form:"page" validate:"omitempty,min=1"`
+	Search    string `form:"search"`
+	IgnoresID []uint `form:"ignore_id"`
 }
 
 // UpdateRequest struct

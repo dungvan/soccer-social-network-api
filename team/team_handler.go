@@ -27,7 +27,7 @@ func (h *HTTPHandler) Index(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response, err := h.usecase.Index(request.Page)
+	response, err := h.usecase.Index(*request)
 	if err != nil {
 		h.Logger.WithFields(logrus.Fields{
 			"error": err,

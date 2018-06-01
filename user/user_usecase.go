@@ -102,7 +102,10 @@ func (u *usecase) Index(r IndexRequest) (IndexResponse, error) {
 	if r.Page < 1 {
 		r.Page = 1
 	}
-	total, users, err := u.repository.GetAllUser(r.Search, r.Page)
+	if r.IgnoresID == nil {
+		r.IgnoresID = []uint{0}
+	}
+	total, users, err := u.repository.GetAllUser(r.Search, r.IgnoresID, r.Page)
 	if err == gorm.ErrRecordNotFound {
 		return IndexResponse{Users: []RespUserSearch{}}, nil
 	} else if err != nil {

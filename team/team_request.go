@@ -2,7 +2,8 @@ package team
 
 // IndexRequest struct
 type IndexRequest struct {
-	Page uint `form:"page" validate:"omitempty,min=1"`
+	Page   uint   `form:"page" validate:"omitempty,min=1"`
+	Search string `form:"search"`
 }
 
 // CreateRequest struct
@@ -25,5 +26,5 @@ type UpdateRequest struct {
 // PlayerRequest struct
 type PlayerRequest struct {
 	ID       uint   `json:"id" validate:"required"`
-	Position string `json:"position" validate:"required,eq=gk|eq=back|eq=defender|eq=midfilder|eq=stricker|eq=winger|eq=any"`
+	Position string `json:"position" validate:"required,eq=goalkeeper|eq=back|eq=defender|eq=midfielder|eq=stricker|eq=winger|eq=any"`
 }

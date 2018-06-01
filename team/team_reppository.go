@@ -13,7 +13,7 @@ import (
 
 // Repository interface
 type Repository interface {
-	GetAllTeam(page uint) (total uint, teams []model.Team, err error)
+	GetAllTeam(search string, page uint) (total uint, teams []model.Team, err error)
 	FindTeamByID(teamID uint) (*model.Team, error)
 	GetAllTeamsByMasterUserID(masterUserID uint) (total uint, teams []model.Team, err error)
 	GetAllTeamsByPlayerUserName(userName string) (total uint, teams []model.Team, err error)
@@ -34,17 +34,14 @@ type repository struct {
 	redis *redis.Conn
 }
 
-func (r *repository) GetAllTeam(page uint) (uint, []model.Team, error) {
+func (r *repository) GetAllTeam(search string, page uint) (uint, []model.Team, error) {
 	var total uint
-	var err error
 	teams := make([]model.Team, 0)
-	result := r.db.Model(&model.Team{}).
-		Select("teams.id, teams.name, teams.description, teams.created_at")
-	result.Count(&total)
-	if total <= pagingLimit*(page-1) {
-		return total, teams, gorm.ErrRecordNotFound
-	}
-	err = result.Offset(pagingLimit * (page - 1)).
+	err := r.db.Model(&model.Team{}).
+		Select("teams.id, teams.name, teams.description, teams.created_at").
+		Where("teams.name LIKE ?", search+"%%").
+		Count(&total).
+		Offset(pagingLimit * (page - 1)).
 		Limit(pagingLimit).Order("id asc").
 		Scan(&teams).Error
 	return total, teams, utils.ErrorsWrap(err, "can't get all teams")

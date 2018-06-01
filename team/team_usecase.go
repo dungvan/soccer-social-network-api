@@ -12,7 +12,7 @@ import (
 // Usecase interface
 type Usecase interface {
 	// Index usecase
-	Index(page uint) (IndexResponse, error)
+	Index(IndexRequest) (IndexResponse, error)
 	// GetByUserName usecase
 	GetByUserName(userName string) (IndexResponse, error)
 	// GetByMasterID usecase
@@ -33,12 +33,12 @@ type usecase struct {
 	repository Repository
 }
 
-func (u *usecase) Index(page uint) (IndexResponse, error) {
+func (u *usecase) Index(r IndexRequest) (IndexResponse, error) {
 	response := IndexResponse{}
-	if page < 1 {
-		page = 1
+	if r.Page < 1 {
+		r.Page = 1
 	}
-	total, teams, err := u.repository.GetAllTeam(page)
+	total, teams, err := u.repository.GetAllTeam(r.Search, r.Page)
 	if err == gorm.ErrRecordNotFound {
 		return IndexResponse{Teams: []RespTeam{}}, nil
 	}

@@ -28,7 +28,7 @@ type Repository interface {
 	// DeleteUserFollow
 	DeleteUserFollow(userFollowID uint) error
 	// GetAllUser
-	GetAllUser(userNameOrEmail string, page uint) (total uint, users []model.User, err error)
+	GetAllUser(userNameOrEmail string, ignoreID []uint, page uint) (total uint, users []model.User, err error)
 	// Delete user
 	DeleteUser(userID uint) error
 	// Update User
@@ -88,13 +88,13 @@ func (r *repository) DeleteUserFollow(userFollowID uint) error {
 	return nil
 }
 
-func (r *repository) GetAllUser(userNameOrEmail string, page uint) (uint, []model.User, error) {
+func (r *repository) GetAllUser(userNameOrEmail string, ignoreID []uint, page uint) (uint, []model.User, error) {
 	likeCondition := userNameOrEmail + "%%"
 	var total uint
 	users := make([]model.User, 0)
 	err := r.db.Model(&model.User{}).
 		Select("id, user_name, email, first_name, last_name, role").
-		Where("user_name LIKE ? OR email LIKE ?", likeCondition, likeCondition).
+		Where("(user_name LIKE ? OR email LIKE ?) AND id NOT IN (?)", likeCondition, likeCondition, ignoreID).
 		Count(&total).
 		Offset(pagingLimit * (page - 1)).
 		Limit(pagingLimit).
