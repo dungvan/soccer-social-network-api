@@ -17,6 +17,7 @@ type IndexResponse struct {
 type RespTournament struct {
 	TypeOfStatusCode int        `json:"-"`
 	ID               uint       `json:"id"`
+	Name             string     `json:"name"`
 	Description      string     `json:"description"`
 	Master           RespMaster `json:"master"`
 	StartDate        time.Time  `json:"start_date"`

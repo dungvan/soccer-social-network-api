@@ -126,6 +126,8 @@ func (r *Router) SetupHandler() {
 
 	r.Mux.Route("/tournaments", func(cr chi.Router) {
 		cr.Use(mMiddleware.JwtAuth(r.LoggerHandler, r.SQLHandler.DB))
+		cr.Get("/", toh.Index)
+		cr.Get("/masters", toh.GetByMaster)
 		cr.Post("/", toh.Create)
 		cr.Get("/{id:0*([1-9])([0-9]?)+}", toh.Show)
 	})

@@ -80,7 +80,38 @@ func (h *HTTPHandler) Show(w http.ResponseWriter, r *http.Request) {
 
 // Index handler
 func (h *HTTPHandler) Index(w http.ResponseWriter, r *http.Request) {
+	request := &IndexRequest{}
+	h.ParseForm(r, request)
+	// validate get data.
+	if err := h.Validate(w, request); err != nil {
+		return
+	}
 
+	response, err := h.usecase.Index(*request)
+	if err != nil {
+		h.Logger.WithFields(logrus.Fields{
+			"error": err,
+		}).Error("usecase.Index() error")
+		common := utils.CommonResponse{Message: "Internal server error", Errors: []string{}}
+		h.StatusServerError(w, common)
+		return
+	}
+	h.ResponseJSON(w, response)
+}
+
+// GetByMaster handler
+func (h *HTTPHandler) GetByMaster(w http.ResponseWriter, r *http.Request) {
+	masterID := auth.GetUserFromContext(r.Context()).ID
+	response, err := h.usecase.GetByMaster(masterID)
+	if err != nil {
+		h.Logger.WithFields(logrus.Fields{
+			"error": err,
+		}).Error("usecase.Index() error")
+		common := utils.CommonResponse{Message: "Internal server error", Errors: []string{}}
+		h.StatusServerError(w, common)
+		return
+	}
+	h.ResponseJSON(w, response)
 }
 
 // NewHTTPHandler return new HTTPHandler instance.

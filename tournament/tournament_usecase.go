@@ -17,6 +17,8 @@ type Usecase interface {
 	Show(tournamentID uint) (RespTournament, error)
 	// Index usecase
 	Index(IndexRequest) (IndexResponse, error)
+	// GetByMaster usecase
+	GetByMaster(masterID uint) (IndexResponse, error)
 }
 
 type usecase struct {
@@ -29,6 +31,7 @@ func (u *usecase) Create(r CreateRequest) (tournamentID uint, err error) {
 	isError := false
 	tournament := &model.Tournament{
 		Master:      &model.Master{UserID: r.UserID},
+		Name:        r.Name,
 		Description: r.Description,
 		StartDate:   r.StartDate,
 		EndDate:     r.EndDate,
@@ -75,6 +78,7 @@ func (u *usecase) Show(tournamentID uint) (RespTournament, error) {
 			FirstName: mstUser.FirstName,
 			LastName:  mstUser.LastName,
 		},
+		Name:        tournament.Name,
 		Description: tournament.Description,
 		StartDate:   tournament.StartDate,
 		EndDate:     tournament.EndDate,
@@ -85,7 +89,106 @@ func (u *usecase) Show(tournamentID uint) (RespTournament, error) {
 }
 
 func (u *usecase) Index(r IndexRequest) (IndexResponse, error) {
-	return IndexResponse{}, nil
+	if r.Page == 0 {
+		r.Page = 1
+	}
+	total, tournaments, err := u.repository.GetAllTournaments(r.Search, r.Page)
+	if err != nil {
+		return IndexResponse{Total: 0, Tournaments: []RespTournament{}}, utils.ErrorsWrap(err, "repository.GetAllTournaments() error")
+	}
+	resp := IndexResponse{
+		Total:       total,
+		Tournaments: make([]RespTournament, 0),
+	}
+	for _, tournament := range tournaments {
+		mstUser, err := u.repository.GetTournamentMaster(tournament.ID)
+		if err != nil {
+			return IndexResponse{Total: 0, Tournaments: []RespTournament{}}, utils.ErrorsWrap(err, "repositiory.GetTournamentMaster() error")
+		}
+		teams, err := u.repository.GetTournamentTeams(tournament.ID)
+		if err != nil {
+			if err == gorm.ErrRecordNotFound {
+				teams = []Team{}
+			} else {
+				return IndexResponse{Total: 0, Tournaments: []RespTournament{}}, utils.ErrorsWrap(err, "repositiory.GetTournamentTeams() error")
+			}
+		}
+		matches, err := u.repository.GetTournamentMatches(tournament.ID)
+		if err != nil {
+			if err == gorm.ErrRecordNotFound {
+				matches = []Match{}
+			} else {
+				return IndexResponse{Total: 0, Tournaments: []RespTournament{}}, utils.ErrorsWrap(err, "repositiory.GetTournamentTeams() error")
+			}
+		}
+		respTournament := RespTournament{
+			ID: tournament.ID,
+			Master: RespMaster{
+				ID:        mstUser.ID,
+				UserName:  mstUser.UserName,
+				FirstName: mstUser.FirstName,
+				LastName:  mstUser.LastName,
+			},
+			Name:        tournament.Name,
+			Description: tournament.Description,
+			StartDate:   tournament.StartDate,
+			EndDate:     tournament.EndDate,
+			Teams:       teams,
+			Matches:     matches,
+		}
+		resp.Tournaments = append(resp.Tournaments, respTournament)
+	}
+	return resp, nil
+}
+
+func (u *usecase) GetByMaster(masterID uint) (IndexResponse, error) {
+	total, tournaments, err := u.repository.GetAllTournamentsByMaster(masterID)
+	if err != nil {
+		return IndexResponse{Total: 0, Tournaments: []RespTournament{}}, utils.ErrorsWrap(err, "repository.GetAllTournaments() error")
+	}
+	resp := IndexResponse{
+		Total:       total,
+		Tournaments: make([]RespTournament, 0),
+	}
+	for _, tournament := range tournaments {
+		mstUser, err := u.repository.GetTournamentMaster(tournament.ID)
+		if err != nil {
+			return IndexResponse{Total: 0, Tournaments: []RespTournament{}}, utils.ErrorsWrap(err, "repositiory.GetTournamentMaster() error")
+		}
+		teams, err := u.repository.GetTournamentTeams(tournament.ID)
+		if err != nil {
+			if err == gorm.ErrRecordNotFound {
+				teams = []Team{}
+			} else {
+				return IndexResponse{Total: 0, Tournaments: []RespTournament{}}, utils.ErrorsWrap(err, "repositiory.GetTournamentTeams() error")
+			}
+		}
+		matches, err := u.repository.GetTournamentMatches(tournament.ID)
+		if err != nil {
+			if err == gorm.ErrRecordNotFound {
+				matches = []Match{}
+			} else {
+				return IndexResponse{Total: 0, Tournaments: []RespTournament{}}, utils.ErrorsWrap(err, "repositiory.GetTournamentTeams() error")
+			}
+		}
+		respTournament := RespTournament{
+			ID: tournament.ID,
+			Master: RespMaster{
+				ID:        mstUser.ID,
+				UserName:  mstUser.UserName,
+				FirstName: mstUser.FirstName,
+				LastName:  mstUser.LastName,
+			},
+			Name:        tournament.Name,
+			Description: tournament.Description,
+			StartDate:   tournament.StartDate,
+			EndDate:     tournament.EndDate,
+			Teams:       teams,
+			Matches:     matches,
+		}
+		resp.Tournaments = append(resp.Tournaments, respTournament)
+	}
+	return resp, nil
 }
 
 // NewUsecase creare new instance of Usecase

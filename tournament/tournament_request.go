@@ -4,7 +4,8 @@ import "time"
 
 // IndexRequest struct
 type IndexRequest struct {
-	page uint `form:"page"`
+	Page   uint   `form:"page" validate:"omitempty,min=1"`
+	Search string `form:"search"`
 }
 
 // CreateRequest struct
