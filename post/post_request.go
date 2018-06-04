@@ -6,7 +6,8 @@ import (
 
 // IndexRequest struct
 type IndexRequest struct {
-	Page uint `form:"page" validate:"omitempty,min=1"`
+	Page     uint   `form:"page" validate:"omitempty,min=1"`
+	UserName string `validate:"required"`
 }
 
 // CreateRequest struct

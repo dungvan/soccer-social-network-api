@@ -53,17 +53,18 @@ func (h *HTTPHandler) Index(w http.ResponseWriter, r *http.Request) {
 	h.ResponseJSON(w, response)
 }
 
-// GetByUserID handler
-func (h *HTTPHandler) GetByUserID(w http.ResponseWriter, r *http.Request) {
+// GetByUserName handler
+func (h *HTTPHandler) GetByUserName(w http.ResponseWriter, r *http.Request) {
 	request := &IndexRequest{}
 	h.ParseForm(r, request)
+	userName := chi.URLParam(r, "user_name")
+	request.UserName = userName
 	// validate get data.
 	if err := h.Validate(w, request); err != nil {
 		return
 	}
-	userIDCreate, _ := strconv.Atoi(chi.URLParam(r, "id"))
 	userIDCall := auth.GetUserFromContext(r.Context()).ID
-	resp, err := h.usecase.GetByUserID(uint(userIDCreate), userIDCall, request.Page)
+	resp, err := h.usecase.GetByUserID(request.UserName, userIDCall, request.Page)
 	if err != nil {
 		h.Logger.WithFields(logrus.Fields{
 			"error": err,

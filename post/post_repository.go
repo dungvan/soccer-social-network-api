@@ -24,7 +24,7 @@ type Repository interface {
 	// GetAllPost return all post with pagination
 	GetAllPost(userID, page uint) (total uint, posts []Post, err error)
 	// GetAllPostsByUserID return all of post record
-	GetAllPostsByUserID(userIDCreate, userIDCall, page uint) (total uint, posts []Post, err error)
+	GetAllPostsByUserID(userName string, userIDCall, page uint) (total uint, posts []Post, err error)
 	// FindPostsByHashtag get all post by hashtag
 	FindPostsByHashtag(keyWord string) (uint, []Post, error)
 	// CreatePost registers record to table post
@@ -119,22 +119,15 @@ func (r *repository) GetAllPost(userID, page uint) (uint, []Post, error) {
 	return total, posts, utils.ErrorsWrap(err, "can't get all posts")
 }
 
-func (r *repository) GetAllPostsByUserID(userIDCreate, userIDCall, page uint) (uint, []Post, error) {
+func (r *repository) GetAllPostsByUserID(userName string, userIDCall, page uint) (uint, []Post, error) {
 	var total uint
-	var err error
 	posts := make([]Post, 0)
-	result := r.db.Model(&model.Post{}).
+	err := r.db.Model(&model.Post{}).
 		Select("users.user_name, users.first_name, users.last_name, posts.id, posts.user_id, posts.caption, posts.type, posts.created_at, COALESCE (star_counts.quantity,0) AS star_count, post_stars.id, CASE WHEN post_stars.id IS NOT NULL THEN true ELSE false END AS star_flag").
-		Joins(`JOIN users ON (posts.user_id = users.id AND users.id = ? AND users.deleted_at IS NULL)`, userIDCreate).
+		Joins(`JOIN users ON (posts.user_id = users.id AND users.user_name = ? AND users.deleted_at IS NULL)`, userName).
 		Joins(`JOIN star_counts ON (star_counts.owner_type = 'posts' AND star_counts.owner_id = posts.id AND star_counts.deleted_at IS NULL)`).
-		Joins(`LEFT JOIN post_stars ON (posts.id = post_stars.post_id AND post_stars.user_id = ? AND post_stars.deleted_at IS NULL)`, userIDCall)
-	result.Count(&total)
-	if total <= pagingLimit*(page-1) {
-		return total, posts, gorm.ErrRecordNotFound
-	}
-	err = result.
-		Offset(pagingLimit * (page - 1)).
-		Limit(pagingLimit).Order("posts.created_at desc, posts.id desc").
+		Joins(`LEFT JOIN post_stars ON (posts.id = post_stars.post_id AND post_stars.user_id = ? AND post_stars.deleted_at IS NULL)`, userIDCall).
+		Count(&total).
 		Scan(&posts).Error
 	return total, posts, utils.ErrorsWrap(err, "can't get all posts")
 }

@@ -22,9 +22,9 @@ type Usecase interface {
 	// Index usecase
 	Index(userID, page uint) (IndexResponse, error)
 	// GetByUserID usecase
-	GetByUserID(userIDCreate, userIDCall, page uint) (IndexResponse, error)
+	GetByUserID(userName string, userIDCall, page uint) (IndexResponse, error)
 	// GetByHashtag usecase
-	GetByHashtag(r HashtagSearchRequest) (HashtagSearchResponse, error)
+	GetByHashtag(r HashtagSearchRequest) (IndexResponse, error)
 	// Create a post
 	Create(CreateRequest) (postID uint, err error)
 	// Show a post
@@ -121,10 +121,13 @@ func (u *usecase) Index(userID, page uint) (IndexResponse, error) {
 	return response, err
 }
 
-func (u *usecase) GetByUserID(userIDCreate, userIDCall, page uint) (IndexResponse, error) {
+func (u *usecase) GetByUserID(userName string, userIDCall, page uint) (IndexResponse, error) {
 	indexResp := IndexResponse{}
-	total, result, err := u.repository.GetAllPostsByUserID(userIDCreate, userIDCall, page)
+	total, result, err := u.repository.GetAllPostsByUserID(userName, userIDCall, page)
 	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return IndexResponse{Posts: []RespPost{}}, nil
+		}
 		return indexResp, utils.ErrorsWrap(err, "repository.GetAllPostsByUserID() error.")
 	}
 	indexResp.Posts = []RespPost{}
@@ -135,6 +138,10 @@ func (u *usecase) GetByUserID(userIDCreate, userIDCall, page uint) (IndexRespons
 		if err != nil {
 			utils.ErrorsWrap(err, "repository.GetRelatedPostImages() error")
 		}
+		comments, err := u.CommentIndexByPostID(post.ID)
+		if err != nil {
+			return IndexResponse{Total: total, Posts: []RespPost{}}, utils.ErrorsWrap(err, "repository.GetUserByID() error")
+		}
 		data := RespPost{
 			ID: post.ID,
 			User: RespUser{
@@ -143,8 +150,9 @@ func (u *usecase) GetByUserID(userIDCreate, userIDCall, page uint) (IndexRespons
 				FirstName: post.FirstName,
 				LastName:  post.LastName,
 			},
-			Caption: post.Caption,
-			Type:    post.Type,
+			Comments: comments,
+			Caption:  post.Caption,
+			Type:     post.Type,
 			ImageURLs: func() []interface{} {
 				output := []interface{}{}
 				if post.Images != nil && len(post.Images) > 0 {
@@ -250,7 +258,7 @@ func (u *usecase) Show(postID uint) (RespPost, error) {
 		output := []interface{}{}
 		if post.Images != nil && len(post.Images) > 0 {
 			for _, image := range post.Images {
-				imageurl := utils.GetStorageURL(infrastructure.Storage, infrastructure.Endpoint, infrastructure.Secure, bucketName, utils.GetObjectPath(infrastructure.Storage, s3ImagePath, image.Name), infrastructure.Region)
+				imageurl := utils.GetStorageURL(infrastructure.Storage, infrastructure.Endpoint, infrastructure.Secure, bucketName, image.Name, infrastructure.Region)
 				output = append(output, imageurl)
 			}
 		}
@@ -403,22 +411,28 @@ func (u *usecase) UploadImages(request UploadImagesRequest) (UploadImagesRespons
 	return response, nil
 }
 
-func (u *usecase) GetByHashtag(r HashtagSearchRequest) (HashtagSearchResponse, error) {
+func (u *usecase) GetByHashtag(r HashtagSearchRequest) (IndexResponse, error) {
+	indexResp := IndexResponse{}
 	total, posts, err := u.repository.FindPostsByHashtag(r.KeyWord)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return HashtagSearchResponse{Total: 0, Posts: []RespPosyByHashtag{}}, nil
+			return IndexResponse{Posts: []RespPost{}}, nil
 		}
-		return HashtagSearchResponse{Total: 0, Posts: []RespPosyByHashtag{}}, utils.ErrorsWrap(err, "repository.FindPostsByHashtag() error")
+		return indexResp, utils.ErrorsWrap(err, "repository.GetAllPostsByUserID() error.")
 	}
-	resp := HashtagSearchResponse{Posts: make([]RespPosyByHashtag, 0)}
+	indexResp.Posts = []RespPost{}
+
 	bucketName := infrastructure.GetConfigString("objectstorage.bucketname")
 	for _, post := range posts {
 		err = u.repository.GetRelatedPostImages(post.Post)
 		if err != nil {
 			utils.ErrorsWrap(err, "repository.GetRelatedPostImages() error")
 		}
-		respPost := RespPosyByHashtag{
+		comments, err := u.CommentIndexByPostID(post.ID)
+		if err != nil {
+			return IndexResponse{Total: total, Posts: []RespPost{}}, utils.ErrorsWrap(err, "repository.GetUserByID() error")
+		}
+		data := RespPost{
 			ID: post.ID,
 			User: RespUser{
 				ID:        post.UserID,
@@ -426,8 +440,9 @@ func (u *usecase) GetByHashtag(r HashtagSearchRequest) (HashtagSearchResponse, e
 				FirstName: post.FirstName,
 				LastName:  post.LastName,
 			},
-			Caption: post.Caption,
-			Type:    post.Type,
+			Comments: comments,
+			Caption:  post.Caption,
+			Type:     post.Type,
 			ImageURLs: func() []interface{} {
 				output := []interface{}{}
 				if post.Images != nil && len(post.Images) > 0 {
@@ -438,12 +453,20 @@ func (u *usecase) GetByHashtag(r HashtagSearchRequest) (HashtagSearchResponse, e
 				}
 				return output
 			}(),
+			VideoURLs: func() []interface{} {
+				output := []interface{}{}
+				// for _, videoName := range post.SourceImageFileName {
+				// 	videourl := utils.GetStorageURL(infrastructure.Storage, infrastructure.Endpoint, infrastructure.Secure, bucketName, utils.GetObjectPath(infrastructure.Storage, S3ImagePath, videoName), infrastructure.Region)
+				// 	output = append(output, videourl)
+				// }
+				return output
+			}(),
 			CreatedAt: post.CreatedAt,
 		}
-		resp.Posts = append(resp.Posts, respPost)
+		indexResp.Posts = append(indexResp.Posts, data)
 	}
-	resp.Total = total
-	return resp, nil
+	indexResp.Total = total
+	return indexResp, err
 }
 func (u *usecase) Update(r UpdateRequest, ctxUser model.User) (RespPost, error) {
 	var err error
