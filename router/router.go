@@ -87,6 +87,7 @@ func (r *Router) SetupHandler() {
 		cr.Get("/users/{id:0*([1-9])([0-9]?)+}", ph.GetByUserID)
 		cr.Post("/", ph.Create)
 		cr.Post("/images", ph.UploadImages)
+		cr.Get("/hashtags", ph.GetByHashtag)
 		cr.Route("/{id:0*([1-9])([0-9]?)+}", func(cr chi.Router) {
 			cr.Delete("/", ph.Delete)
 			cr.Put("/", ph.Update)

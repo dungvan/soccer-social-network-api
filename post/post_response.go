@@ -68,3 +68,19 @@ type StarCountResponse struct {
 type UploadImagesResponse struct {
 	ImageNames []string `json:"image_names"`
 }
+
+// HashtagSearchResponse struct
+type HashtagSearchResponse struct {
+	Total uint                `json:"total"`
+	Posts []RespPosyByHashtag `json:"posts"`
+}
+
+// RespPosyByHashtag struct
+type RespPosyByHashtag struct {
+	ID        uint        `json:"id"`
+	User      RespUser    `json:"user"`
+	Caption   string      `json:"caption"`
+	Type      string      `json:"type"`
+	ImageURLs interface{} `json:"image_urls"`
+	CreatedAt time.Time   `json:"created_at"`
+}

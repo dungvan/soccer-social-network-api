@@ -23,6 +23,8 @@ type Usecase interface {
 	Index(userID, page uint) (IndexResponse, error)
 	// GetByUserID usecase
 	GetByUserID(userIDCreate, userIDCall, page uint) (IndexResponse, error)
+	// GetByHashtag usecase
+	GetByHashtag(r HashtagSearchRequest) (HashtagSearchResponse, error)
 	// Create a post
 	Create(CreateRequest) (postID uint, err error)
 	// Show a post
@@ -401,6 +403,48 @@ func (u *usecase) UploadImages(request UploadImagesRequest) (UploadImagesRespons
 	return response, nil
 }
 
+func (u *usecase) GetByHashtag(r HashtagSearchRequest) (HashtagSearchResponse, error) {
+	total, posts, err := u.repository.FindPostsByHashtag(r.KeyWord)
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return HashtagSearchResponse{Total: 0, Posts: []RespPosyByHashtag{}}, nil
+		}
+		return HashtagSearchResponse{Total: 0, Posts: []RespPosyByHashtag{}}, utils.ErrorsWrap(err, "repository.FindPostsByHashtag() error")
+	}
+	resp := HashtagSearchResponse{Posts: make([]RespPosyByHashtag, 0)}
+	bucketName := infrastructure.GetConfigString("objectstorage.bucketname")
+	for _, post := range posts {
+		err = u.repository.GetRelatedPostImages(post.Post)
+		if err != nil {
+			utils.ErrorsWrap(err, "repository.GetRelatedPostImages() error")
+		}
+		respPost := RespPosyByHashtag{
+			ID: post.ID,
+			User: RespUser{
+				ID:        post.UserID,
+				UserName:  post.UserName,
+				FirstName: post.FirstName,
+				LastName:  post.LastName,
+			},
+			Caption: post.Caption,
+			Type:    post.Type,
+			ImageURLs: func() []interface{} {
+				output := []interface{}{}
+				if post.Images != nil && len(post.Images) > 0 {
+					for _, image := range post.Images {
+						imageurl := utils.GetStorageURL(infrastructure.Storage, infrastructure.Endpoint, infrastructure.Secure, bucketName, image.Name, infrastructure.Region)
+						output = append(output, imageurl)
+					}
+				}
+				return output
+			}(),
+			CreatedAt: post.CreatedAt,
+		}
+		resp.Posts = append(resp.Posts, respPost)
+	}
+	resp.Total = total
+	return resp, nil
+}
 func (u *usecase) Update(r UpdateRequest, ctxUser model.User) (RespPost, error) {
 	var err error
 	user, post, err := u.repository.FindPostByID(r.ID)

@@ -471,6 +471,23 @@ func (h *HTTPHandler) CommentDelete(w http.ResponseWriter, r *http.Request) {
 	h.ResponseJSON(w, common)
 }
 
+// GetByHashtag handler
+func (h *HTTPHandler) GetByHashtag(w http.ResponseWriter, r *http.Request) {
+	request := &HashtagSearchRequest{}
+	h.ParseForm(r, request)
+	// validate get data.
+	if err := h.Validate(w, request); err != nil {
+		return
+	}
+	resp, err := h.usecase.GetByHashtag(*request)
+	if err != nil {
+		common := utils.CommonResponse{Message: "internal server error"}
+		h.StatusServerError(w, common)
+		return
+	}
+	h.ResponseJSON(w, resp)
+}
+
 // NewHTTPHandler return new HTTPHandler instance.
 func NewHTTPHandler(bh *base.HTTPHandler, bu *base.Usecase, br *base.Repository, s *infrastructure.SQL, c *infrastructure.Cache, s3 *infrastructure.S3) *HTTPHandler {
 	// post set.

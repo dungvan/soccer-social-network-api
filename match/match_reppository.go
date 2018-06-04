@@ -132,12 +132,12 @@ func (r *repository) GetMatchesByMaster(masterUserID uint) (uint, []model.Match,
 
 func (r *repository) GetMatchMaster(matchID uint) (*model.User, error) {
 	mstUser := model.User{}
-	result := r.db.Model(&mstUser).
+	err := r.db.Model(&mstUser).
 		Select("users.id, users.user_name, users.first_name, users.last_name").
 		Joins(`INNER JOIN masters ON (masters.user_id = users.id AND masters.deleted_at IS NULL)`).
 		Joins(`INNER JOIN matches ON (matches.id = masters.owner_id AND masters.owner_type = 'matches' AND matches.id = ? AND matches.deleted_at IS NULL)`, matchID).
-		Scan(&mstUser)
-	return &mstUser, utils.ErrorsWrap(result.Error, "can't get match-master relation")
+		Scan(&mstUser).Error
+	return &mstUser, utils.ErrorsWrap(err, "can't get match-master relation")
 }
 
 func (r *repository) CreateMatch(m *model.Match, tx *gorm.DB) error {

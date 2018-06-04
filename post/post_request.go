@@ -50,6 +50,11 @@ type Image struct {
 	Name     string
 }
 
+// HashtagSearchRequest struct
+type HashtagSearchRequest struct {
+	KeyWord string `form:"keyword" validate:"omitempty,gt=0"`
+}
+
 //===========================================
 //==================COMMENT==================
 //===========================================

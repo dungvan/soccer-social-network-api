@@ -34,7 +34,7 @@ type usecase struct {
 }
 
 func (u *usecase) Index(r IndexRequest) (IndexResponse, error) {
-	response := IndexResponse{}
+	response := IndexResponse{Teams: make([]RespTeam, 0)}
 	if r.Page < 1 {
 		r.Page = 1
 	}
@@ -75,10 +75,7 @@ func (u *usecase) Index(r IndexRequest) (IndexResponse, error) {
 }
 
 func (u *usecase) GetByMasterID(masterID uint) (IndexResponse, error) {
-	response := IndexResponse{
-		Total: 0,
-		Teams: []RespTeam{},
-	}
+	response := IndexResponse{Teams: make([]RespTeam, 0)}
 
 	total, teams, err := u.repository.GetAllTeamsByMasterUserID(masterID)
 	if err != nil {
@@ -112,10 +109,7 @@ func (u *usecase) GetByMasterID(masterID uint) (IndexResponse, error) {
 }
 
 func (u *usecase) GetByUserName(userName string) (IndexResponse, error) {
-	response := IndexResponse{
-		Total: 0,
-		Teams: []RespTeam{},
-	}
+	response := IndexResponse{Teams: make([]RespTeam, 0)}
 
 	total, teams, err := u.repository.GetAllTeamsByPlayerUserName(userName)
 	if err != nil {

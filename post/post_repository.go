@@ -24,7 +24,9 @@ type Repository interface {
 	// GetAllPost return all post with pagination
 	GetAllPost(userID, page uint) (total uint, posts []Post, err error)
 	// GetAllPostsByUserID return all of post record
-	GetAllPostsByUserID(userIDCreate, userIDCall, page uint) (uint, []Post, error)
+	GetAllPostsByUserID(userIDCreate, userIDCall, page uint) (total uint, posts []Post, err error)
+	// FindPostsByHashtag get all post by hashtag
+	FindPostsByHashtag(keyWord string) (uint, []Post, error)
 	// CreatePost registers record to table post
 	CreatePost(post *model.Post, transaction *gorm.DB) error
 	// CreateHashtags is insert hashtag list into hashtag table if it does not exist.
@@ -278,6 +280,19 @@ func (r *repository) GetRelatedPostImages(post *model.Post) error {
 	post.Images = make([]model.Image, 0)
 	result := r.db.Model(post).Related(&post.Images)
 	return utils.ErrorsWrap(result.Error, "can't get posts-images relation")
+}
+
+func (r *repository) FindPostsByHashtag(keyWord string) (uint, []Post, error) {
+	posts := make([]Post, 0)
+	var total uint
+	err := r.db.Model(&model.Post{}).
+		Select("users.user_name, users.first_name, users.last_name, posts.id, posts.user_id, posts.caption, posts.type, posts.created_at").
+		Joins(`JOIN users ON (posts.user_id = users.id AND users.deleted_at IS NULL)`).
+		Joins(`JOIN post_hashtags ON (posts.id = post_hashtags.post_id AND post_hashtags.deleted_at IS NULL)`).
+		Joins(`JOIN hashtags ON (post_hashtags.hashtag_id = hashtags.id AND hashtags.deleted_at IS NULL AND hashtags.key_word LIKE ?)`, keyWord+"%%").
+		Count(&total).
+		Scan(&posts).Error
+	return total, posts, utils.ErrorsWrap(err, "can't find post by hashtag")
 }
 
 func (r *repository) UpdatePost(post *model.Post) error {
